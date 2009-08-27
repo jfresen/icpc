@@ -1,0 +1,66 @@
+
+Problem               Slowest             Time        Limit?
+---------------------------------------------------------------
+A Word Ladder           maks_simple.java     0.25s       3s
+B Bonus Word            maks_slow3.java      4.12s      15s
+C Contest               maks.java            0.08s       3s
+D Cycling               jan.cpp             18.93s      30s
+E Escape                erikjan.cpp          0.02s       3s
+F Settling Salesman     maks.java            1.09s       5s
+G Space                 jan.cpp             44.31s      60s
+H Herbert               -                    0.00s       3s
+---------------------------------------------------------------
+
+
+       A/erikjan.cpp passed 0:00.03
+           A/jan.cpp passed 0:00.05
+        A/kamiel.cpp passed 0:00.17
+         A/maks.java passed 0:00.26
+  A/maks_faster.java passed 0:00.20
+  A/maks_simple.java passed 0:00.25
+   A/maks_wrong.java FAILED 0:00.26
+         B/boris.cpp passed 0:01.20
+       B/erikjan.cpp passed 0:00.25
+           B/jan.cpp passed 0:50.77
+          B/maks.cpp passed 0:00.29
+   B/maks_slow1.java passed 0:19.80
+   B/maks_slow2.java passed 0:19.97
+   B/maks_slow3.java passed 0:04.12
+            C/maks.c passed 0:00.00
+       C/erikjan.cpp passed 0:00.03
+       C/greedy1.cpp FAILED 0:00.00
+       C/greedy2.cpp FAILED 0:00.00
+       C/greedy3.cpp FAILED 0:00.00
+           C/jan.cpp passed 0:00.00
+    C/sebastiaan.cpp passed 0:00.00
+         C/maks.java passed 0:00.08
+         D/boris.cpp passed 0:00.11
+       D/erikjan.cpp passed 0:00.36
+           D/jan.cpp passed 0:18.93
+           D/wa1.cpp FAILED 0:00.14
+         D/maks.java passed 0:03.28
+       E/erikjan.cpp passed 0:00.02
+           E/jan.cpp passed 0:00.01
+          E/maks.cpp passed 0:00.01
+       F/erikjan.cpp passed 0:00.03
+           F/jan.cpp passed 0:00.05
+          F/maks.cpp passed 0:00.06
+           F/seb.cpp passed 0:00.18
+        F/sebRef.cpp FAILED --TLE--
+         F/maks.java passed 0:01.09
+       G/erikjan.cpp passed 0:03.37
+          G/hash.cpp FAILED --TLE--
+           G/jan.cpp passed 0:44.31
+       G/janslow.cpp FAILED --TLE--
+      G/timeout1.cpp FAILED --TLE--
+      G/timeout2.cpp FAILED --TLE--
+      G/timeout3.cpp FAILED --TLE--
+      G/timeout4.cpp passed 0:28.36
+      G/erikjan.java passed 0:21.37
+         G/maks.java FAILED --TLE--
+  G/maks_simple.java FAILED --TLE--
+       H/erikjan.cpp passed 0:00.00
+           H/jan.cpp passed 0:00.00
+        H/kamiel.cpp passed 0:00.00
+          H/maks.cpp passed 0:00.00
+

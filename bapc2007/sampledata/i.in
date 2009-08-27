@@ -1,0 +1,38 @@
+1
+8 28
+twente
+utrecht
+groningen
+amsterdam
+eindhoven
+leiden
+delft
+nijmegen
+5 utrecht B rejected
+8 eindhoven F accepted
+10 utrecht F accepted
+17 utrecht B rejected
+18 leiden C rejected
+23 twente F rejected
+25 utrecht B accepted
+26 amsterdam D rejected
+27 amsterdam D accepted
+27 leiden C accepted
+27 groningen F accepted
+28 twente F rejected
+30 nijmegen C rejected
+30 nijmegen C accepted
+30 delft B accepted
+30 delft B rejected
+33 twente F accepted
+47 groningen D rejected
+51 leiden D accepted
+51 amsterdam C accepted
+51 groningen D accepted
+60 utrecht D accepted
+65 utrecht J accepted
+67 twente F rejected
+70 twente F accepted
+90 eindhoven D accepted
+100 utrecht A rejected
+101 utrecht C rejected
