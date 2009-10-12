@@ -44,6 +44,7 @@ public class ProblemB
 		public int n;
 		public Tuple(double x, int v)
 		{this.x = x;this.n = v;}
+		@Override
 		public int compareTo(Tuple that)
 		{
 			if (this.x < that.x)
