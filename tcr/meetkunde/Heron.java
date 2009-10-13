@@ -14,7 +14,7 @@ public class Heron
 			area(r.nextInt(), r.nextInt(), r.nextInt(), r.nextInt(), r.nextInt(), r.nextInt());
 	}
 	
-	private static double area(long x1, long x2, long x3, long y1, long y2, long y3)
+	public static double area(long x1, long x2, long x3, long y1, long y2, long y3)
 	{
 		double a = Math.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
 		double b = Math.sqrt((x2-x3)*(x2-x3) + (y2-y3)*(y2-y3));
