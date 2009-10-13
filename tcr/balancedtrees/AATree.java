@@ -4,7 +4,7 @@ public class AATree<T extends Comparable<? super T>>
 {
 	
 	private Node root, deletedNode, lastNode;
-	private Node nullNode;
+	Node nullNode;
 
 	public AATree()
 	{
@@ -102,14 +102,14 @@ public class AATree<T extends Comparable<? super T>>
 		return t;
 	}
 
-	private /*static <T extends Comparable<? super T>> AATree<T>.*/Node skew(/*AATree<T>.*/Node t)
+	private static <T extends Comparable<? super T>> AATree<T>.Node skew(AATree<T>.Node t)
 	{
 		if (t.left.level == t.level)
 			t = rotateWithLeftChild(t);
 		return t;
 	}
 
-	private /*static <T extends Comparable<? super T>> AATree<T>.*/Node split(/*AATree<T>.*/Node t)
+	private static <T extends Comparable<? super T>> AATree<T>.Node split(AATree<T>.Node t)
 	{
 		if (t.right.right.level == t.level)
 		{
@@ -119,17 +119,17 @@ public class AATree<T extends Comparable<? super T>>
 		return t;
 	}
 
-	private /*static <T extends Comparable<? super T>> AATree<T>.*/Node rotateWithLeftChild(/*AATree<T>.*/Node k2)
+	private static <T extends Comparable<? super T>> AATree<T>.Node rotateWithLeftChild(AATree<T>.Node k2)
 	{
-		/*AATree<T>.*/Node k1 = k2.left;
+		AATree<T>.Node k1 = k2.left;
 		k2.left = k1.right;
 		k1.right = k2;
 		return k1;
 	}
 
-	private /*static <T extends Comparable<? super T>> AATree<T>.*/Node rotateWithRightChild(/*AATree<T>.*/Node k1)
+	private static <T extends Comparable<? super T>> AATree<T>.Node rotateWithRightChild(AATree<T>.Node k1)
 	{
-		/*AATree<T>.*/Node k2 = k1.right;
+		AATree<T>.Node k2 = k1.right;
 		k1.right = k2.left;
 		k2.left = k1;
 		return k2;

@@ -24,6 +24,11 @@ public class Visualizer
 		showWindow("Polygon Monotonation", new MonotonationPanel(points, monotones));
 	}
 	
+	public static void showTriangulation(Triangulation.Point[] triangles)
+	{
+		showWindow("Polygon Triangulation", new TriangulationPanel(triangles));
+	}
+	
 	private static void showWindow(String title, JPanel panel)
 	{
 		JFrame frame = new JFrame(title);
@@ -67,7 +72,7 @@ public class Visualizer
 
 	private static class MonotonationPanel extends JPanel
 	{
-		private static final long serialVersionUID = 976226483047884696L;
+		private static final long serialVersionUID = -7401152458083787649L;
 		private Triangulation.Point[] points;
 		private List<Triangulation.Point> monotones;
 		private int seed;
@@ -110,6 +115,35 @@ public class Visualizer
 				           (int)points[(i+1)%n].x, (int)points[(i+1)%n].y);
 		}
 		
+	}
+	
+	private static class TriangulationPanel extends JPanel
+	{
+		private static final long serialVersionUID = -6821370679374902488L;
+		private Triangulation.Point[] triangles;
+		public TriangulationPanel(Triangulation.Point[] t)
+		{
+			triangles = t;
+			setPreferredSize(new Dimension(400, 400));
+		}
+		@Override
+		protected void paintComponent(Graphics g1)
+		{
+			super.paintComponent(g1);
+			Graphics2D g = (Graphics2D)g1;
+			g.scale(1, -1);
+			int n = triangles.length;
+			int[] x = new int[n];
+			int[] y = new int[n];
+			for (int i = 0; i < n; i++)
+			{
+				x[i] = (int)triangles[i].x;
+				y[i] = (int)triangles[i].y;
+			}
+			int[] z = {3, 0, 0};
+			for (int i = 0, j = 1; i < n; i++, j++)
+				g.drawLine(x[i], y[i], x[j-z[j%3]], y[j-z[j%3]]);
+		}
 	}
 	
 }

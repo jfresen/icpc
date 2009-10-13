@@ -2,12 +2,10 @@ package tcr.meetkunde;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import tcr.balancedtrees.AATree;
 
 // Coordinates are defined as follows:
 // - x runs from left to right
@@ -27,10 +25,27 @@ public class Triangulation
 	public static List<Point> monotones;
 	public static Map<Point, Edge> e;
 	
-	
 	public static void main(String[] args)
 	{
-		Point[] points = getExample1();
+		Point[] points = new Point[]
+		{
+			new Point( 3, 0),
+			new Point( 6, 4),
+			new Point(10, 2),
+			new Point( 9,10),
+			new Point(14, 8),
+			new Point(15,18),
+			new Point(12,16),
+			new Point(11,28),
+			new Point( 8,26),
+			new Point( 7,30),
+			new Point( 2,24),
+			new Point( 5,20),
+			new Point( 4,14),
+			new Point( 1,18),
+			new Point( 0, 6),
+		};
+		int n = points.length;
 		double f = 11;
 		double c = 40;
 		for (Point p : points)
@@ -41,9 +56,14 @@ public class Triangulation
 		
 		// compute the monotones
 		List<Point> monotones = monotonize(points);
+		Point[] triangles = new Point[(n-2)*3];
+		triangulate(monotones, triangles);
 		
-		// show on a JFrame
-		Visualizer.showYMonotonePolygon(points, monotones);
+		// calculate area of the polygon
+		double area = 0;
+		for (int i = 0; i < n-2; i++)
+			area += area(triangles[3*i], triangles[3*i+1], triangles[3*i+2]);
+		System.out.println(area);
 	}
 	
 	public static double area(Point a, Point b, Point c)
@@ -54,6 +74,59 @@ public class Triangulation
 	public static boolean isClockWise(Point a, Point b, Point c)
 	{
 		return area(a, b, c) < -EPSILON;
+	}
+	
+	private static boolean isTriangle(Point p, Point u, Point v, Point w)
+	{
+		return u==p ? isClockWise(u,v,w) : isClockWise(u,w,v);
+	}
+	
+	private static void triangulate(List<Point> monotones, Point[] triangles)
+	{
+		int t = 0;
+		for (Point p : monotones)
+		{
+			// Bring p to the top
+			while (!p.isAbove(p.prev)) p = p.prev;
+			while (!p.isAbove(p.next)) p = p.next;
+			Point u, v, w, q = p;
+			// Initialize the stack with the two topmost points
+			LinkedList<Point> s = new LinkedList<Point>();
+			s.push(p);
+			s.push(p.next.isAbove(q.prev) ? (p=p.next) : (q=q.prev));
+			// Continue untill there is one point left
+			while (p.next != q.prev)
+			{
+				// Pick the next highest point
+				u = p.next.isAbove(q.prev) ? (p=p.next) : (q=q.prev);
+				// Is this point in the same chain as the top of the stack?
+				boolean dfChs = u.next != s.peek() && u.prev != s.peek();
+				// Remove from the stack, in two different situations
+				v = dfChs ? s.removeLast() : s.pop();
+				// Continue there are no more triangles to make
+				while (!s.isEmpty() && (dfChs || isTriangle(p, u, v, s.peek())))
+				{
+					w = dfChs ? s.removeLast() : s.pop();
+					triangles[t++] = u;
+					triangles[t++] = u==p ? w : v;
+					triangles[t++] = u==p ? v : w;
+					v = w;
+				}
+				s.push(v);
+				s.push(u);
+			}
+			boolean sInP = s.peek() == p;
+			u = p.next;
+			v = s.pop();
+			while (!s.isEmpty())
+			{
+				w = s.pop();
+				triangles[t++] = u;
+				triangles[t++] = sInP ? w : v;
+				triangles[t++] = sInP ? v : w;
+				v = w;
+			}
+		}
 	}
 	
 	// in: points given in counterclockwise order, forming a simple polygon
@@ -73,8 +146,8 @@ public class Triangulation
 		}
 		
 		// Subdivide into monotone polygons
-		Arrays.sort(p, new TriangulationComparator());
-		AATree<Edge> tree = new AATree<Edge>();
+		Arrays.sort(p);
+		AATree tree = new AATree();
 		monotones = new ArrayList<Point>();
 		for (Point vi : p)
 		{
@@ -128,6 +201,7 @@ public class Triangulation
 							vi = insertDiagonal(vi, ej.helper);
 						ej.helper = vi;
 					}
+					break;
 			}
 		}
 		return monotones;
@@ -135,8 +209,6 @@ public class Triangulation
 	
 	private static int getType(Point p)
 	{
-		if (p.type != -1)
-			return p.type;
 		if (p.isAbove(p.next) && p.isAbove(p.prev))
 			return isClockWise(p.prev, p, p.next) ? SPLIT_VERTEX : START_VERTEX;
 		if (p.next.isAbove(p) && p.prev.isAbove(p))
@@ -177,78 +249,25 @@ public class Triangulation
 			monotones.add(pnj);
 		return pni;
 	}	
-	private static Point[] getExample1()
-	{ // f: 11, c: 40
-		return new Point[]
-		{
-			new Point( 3, 0),
-			new Point( 6, 4),
-			new Point(10, 2),
-			new Point( 9,10),
-			new Point(14, 8),
-			new Point(15,18),
-			new Point(12,16),
-			new Point(11,28),
-			new Point( 8,26),
-			new Point( 7,30),
-			new Point( 2,24),
-			new Point( 5,20),
-			new Point( 4,14),
-			new Point( 1,18),
-			new Point( 0, 6),
-		};
-	}
-	private static Point[] getExample2()
-	{ // f: 16, c: 20
-		int n = 9;
-		Point[] points = new Point[2*n+1];
-		for (int i = 0; i < n; i++)
-		{
-			points[2*i]   = new Point(2*(n-i),   1+i);
-			points[2*i+1] = new Point(2*(n-i)-1, 1+i+n+5);
-		}
-		points[2*n] = new Point(0, 0);
-		return points;
-	}
-	private static Point[] getExample3()
-	{ // f: 40, c: 20
-		return new Point[]
-		{
-			new Point(0,0),
-			new Point(1,.5),
-			new Point(2,3),
-			new Point(3,2),
-			new Point(4,4),
-			new Point(5,2),
-			new Point(6,5),
-			new Point(3,9),
-		};
-	}
-	private static Point[] getExample4()
-	{ // f: 40, c: 20
-		return new Point[]
-		{
-			new Point(0,8),
-			new Point(1,0),
-			new Point(2,2),
-			new Point(6,0),
-			new Point(4,4),
-			new Point(5,7),
-			new Point(3,9),
-			new Point(2,6),
-		};
+	
+	static int comparePointToEdge(Point p, Edge e)
+	{
+		double cx;
+		if (e.a.y == e.b.y)
+			cx = (e.a.x+e.b.x)/2;
+		else
+			cx = e.a.x + (p.y-e.a.y)*(e.b.x-e.a.x)/(e.b.y-e.a.y);
+		return p.x < cx ? -1 : p.x > cx ? 1 : 0;
 	}
 	
-	public static class Point implements Comparable<Edge>
+	public static class Point implements Comparable<Point>
 	{
 		public double x, y;
 		public Point next, prev;
-		public int type;
 		public Point(double x, double y)
 		{
 			this.x = x;
 			this.y = y;
-			type = -1;
 		}
 		public boolean isAbove(Point that)
 		{
@@ -265,31 +284,12 @@ public class Triangulation
 			return this.x == that.x && this.y == that.y;
 		}
 		@Override
-		public int compareTo(Edge e)
+		public int compareTo(Point that)
 		{
-			double cx;
-			if (e.a.y == e.b.y)
-				cx = (e.a.x+e.b.x)/2;
-			else
-				cx = e.a.x + (y-e.a.y)*(e.b.x-e.a.x)/(e.b.y-e.a.y);
-			return x < cx ? -1 : x > cx ? 1 : 0;
-		}
-		@Override
-		public String toString()
-		{
-			return "("+x+","+y+")";
-		}
-	}
-
-	private static class TriangulationComparator implements Comparator<Point>
-	{ // sort top to bottom, left to right
-		@Override
-		public int compare(Point p, Point q)
-		{
-			if (p.y > q.y) return -1;
-			if (p.y < q.y) return  1;
-			if (p.x < q.x) return -1;
-			if (p.x > q.x) return  1;
+			if (this.y > that.y) return -1;
+			if (this.y < that.y) return  1;
+			if (this.x < that.x) return -1;
+			if (this.x > that.x) return  1;
 			return 0;
 		}
 	}
@@ -311,9 +311,9 @@ public class Triangulation
 			Point t1 = this.a.y > this.b.y ? this.a : this.b;
 			Point t2 = that.a.y > that.b.y ? that.a : that.b;
 			if (t1.y < t2.y)
-				return t1.compareTo(that);
+				return comparePointToEdge(t1, that);
 			else if (t2.y < t1.y)
-				return -t2.compareTo(this);
+				return -comparePointToEdge(t2, this);
 			else
 			{
 				Point b1 = t1 == this.a ? this.b : this.a;
@@ -321,11 +321,137 @@ public class Triangulation
 				return isClockWise(b1, t1, b2) ? -1 : 1;
 			}
 		}
-		@Override
-		public String toString()
+	}
+	
+	private static class AATree
+	{
+		
+		private Node root, lastNode;
+		Node nullNode;
+
+		public AATree()
 		{
-			return a+" -> "+b;
+			nullNode = new Node(null);
+			nullNode.left = nullNode.right = nullNode;
+			nullNode.level = 0;
+			root = nullNode;
 		}
+
+		public void insert(Edge x)
+		{
+			root = insert(x, root);
+		}
+
+		public void remove(Edge x)
+		{
+			root = remove(x, root);
+		}
+
+		public Edge find(Point x)
+		{
+			Node current = root;
+			Node oneSmaller = nullNode;
+
+			for (;;)
+			{
+				if (current == nullNode)
+					break;
+				else if (comparePointToEdge(x, current.element) < 0)
+					current = current.left;
+				else if (comparePointToEdge(x, current.element) > 0)
+					current = (oneSmaller=current).right;
+				else
+					return current.element;
+			}
+			return oneSmaller.element;
+		}
+
+		private Node insert(Edge x, Node t)
+		{
+			if (t == nullNode)
+				t = new Node(x);
+			else if (x.compareTo(t.element) < 0)
+				t.left = insert(x, t.left);
+			else if (x.compareTo(t.element) > 0)
+				t.right = insert(x, t.right);
+
+			t = skew(t);
+			t = split(t);
+			return t;
+		}
+
+		private Node remove(Edge x, Node t)
+		{
+			if (t != nullNode)
+			{
+				// Step 1: Search down the tree and set lastNode and deletedNode
+				lastNode = t;
+				if (x.compareTo(t.element) < 0)
+					t.left = remove(x, t.left);
+				else
+					t.right = remove(x, t.right);
+
+				// Step 2: If at the bottom of the tree and
+				//         x is present, we remove it
+				if (t == lastNode)
+					t = t.right;
+
+				// Step 3: Otherwise, we are not at the bottom; rebalance
+				else if (t.left.level < t.level-1 || t.right.level < t.level-1)
+				{
+					if (t.right.level > --t.level)
+						t.right.level = t.level;
+					t = skew(t);
+					t.right = skew(t.right);
+					t.right.right = skew(t.right.right);
+					t = split(t);
+					t.right = split(t.right);
+				}
+			}
+			return t;
+		}
+
+		private Node skew(Node t)
+		{
+			if (t.left.level == t.level)
+			{
+				Node k = t.left;
+				t.left = k.right;
+				k.right = t;
+				t = k;
+			}
+			return t;
+		}
+
+		private Node split(Node t)
+		{
+			if (t.right.right.level == t.level)
+			{
+				Node k = t.right;
+				t.right = k.left;
+				k.left = t;
+				t = k;
+				t.level++;
+			}
+			return t;
+		}
+
+		private class Node
+		{
+			public Edge element; // The data in the node
+			public Node left; // Left child
+			public Node right; // Right child
+			public int level; // Level
+			
+			// Constructors
+			public Node(Edge theElement)
+			{
+				element = theElement;
+				left = right = nullNode;
+				level = 1;
+			}
+		}
+
 	}
 	
 }
