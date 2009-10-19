@@ -14,12 +14,11 @@ public class ProblemA
 		int cases = in.nextInt();
 		while (cases-- > 0)
 		{
-			int p = in.nextInt();
-			int size = 0;
-			for (int i = 0; i < p; i++)
+			int p = in.nextInt(), size = 0;
+			for (int i = 0, d, pos; i < p; i++)
 			{
-				int d = in.nextInt(); // note that d is always unique
-				int pos = ~Arrays.binarySearch(dyn, 0, size, d);
+				d = in.nextInt();
+				pos = ~Arrays.binarySearch(dyn, 0, size, d);
 				dyn[pos] = d;
 				if (pos == size)
 					size++;

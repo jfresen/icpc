@@ -57,6 +57,8 @@ public class ProblemB
 			}
 			int maxk = 1;
 			K curr = null;
+			// For each k, create all possible subcollections that Cheng has.
+			// (relax, there're less than 200k possible subsets)
 			while (maxk <= 10 && ks[maxk] > 0)
 			{
 				for (int i = 0; i < ks[maxk]; i++)
@@ -78,9 +80,11 @@ public class ProblemB
 	{
 		if (!vase[s][d])
 			return false;
+		// Does Cheng contain all decorations with shape s?
 		for (int i = 0; i < k.s.length; i++)
 			if (!vase[k.s[i]][d])
 				return false;
+		// And does he have all shapes with decoration d?
 		for (int i = 0; i < k.d.length; i++)
 			if (!vase[s][k.d[i]])
 				return false;

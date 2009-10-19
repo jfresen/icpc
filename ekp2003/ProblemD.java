@@ -31,6 +31,7 @@ public class ProblemD
 				for (j = i+1; s[j].l < s[i].l; j = s[j].b);
 			for (int i = 0; i < m-1; i++)
 				s[s[i].b].e += 1 + s[i].e;
+			// execute the queries
 			for (int query = 0; query < q; query++)
 			{
 				Employee e = employee[in.nextInt()];

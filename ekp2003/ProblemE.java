@@ -14,7 +14,7 @@ public class ProblemE
 	
 	public ProblemE() throws Throwable
 	{
-		Scanner in = new Scanner(new File("ekp2003\\sampledata\\e.in"));
+		Scanner in = new Scanner(new File("ekp2003/testdata/e.in"));
 		int cases = in.nextInt();
 		while (cases-- > 0)
 		{
