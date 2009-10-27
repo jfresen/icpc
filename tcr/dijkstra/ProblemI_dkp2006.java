@@ -68,6 +68,10 @@ public class ProblemI_dkp2006
 					q.add(new Node(e.t, n.l + e.l));
 			}
 			
+			
+			
+			
+			
 			// Do a forward dijkstra with dynamic programming
 			q = new PriorityQueue<Node>();
 			int[][] dyn = new int[N+1][2];

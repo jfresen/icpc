@@ -56,6 +56,7 @@ public class Triangulation
 		
 		// compute the monotones
 		List<Point> monotones = monotonize(points);
+		// convert the monotones to triangles
 		Point[] triangles = new Point[(n-2)*3];
 		triangulate(monotones, triangles);
 		
