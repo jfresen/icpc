@@ -18,7 +18,7 @@ class BFS
 			int m = in.nextInt(); // number of edges
 			int start = in.nextInt();
 			int end = in.nextInt();
-			List<Integer>[] edges = new ArrayList[n];
+			List<Integer>[] edges = new List[n];
 			for (int i = 0; i < n; i++)
 				edges[i] = new ArrayList<Integer>();
 			// directed graph:
@@ -45,9 +45,12 @@ class BFS
 
 
 
-// Implementation of Dijkstra. Input file specifies number of nodes, number of
-// edges, the start node, the end node and all connections (triples of three
-// ints from, to and length). Node numbers start from 0.
+// Implementation of Dijkstra (shortest path). Input file specifies number of
+// nodes, number of edges, the start node, the end node and all connections
+// (triples of three ints from, to and length). Node numbers start from 0.
+// This does not keep track of the actual path. To do so, add 'int prev' to the
+// Node class and 'int[] prev = new int[n]' to the algorithm. Create nodes with
+// nd.i as the prev and in the if body also set 'prev[nd.i] = nd.prev'.
 class Dijkstra
 {
 	public static void main(String[] args) throws Throwable
@@ -60,7 +63,7 @@ class Dijkstra
 			int m = in.nextInt(); // number of edges
 			int start = in.nextInt();
 			int end = in.nextInt();
-			List<Edge>[] edges = new ArrayList[n];
+			List<Edge>[] edges = new List[n];
 			for (int i = 0; i < n; i++)
 				edges[i] = new ArrayList<Edge>();
 			// directed graph:
@@ -112,130 +115,63 @@ class Dijkstra
 
 
 
-// Implementation of Prim. Input file specifies number of nodes, number of edges
-// and all connections (triples of three ints from, to and length). Node numbers
-// start from 0.
-class Prim
+// Implementation of Bellman-Ford (shortest path), which is slower then
+// Dijkstra, but can handle negative edges. Input file specifies number of
+// nodes, number of edges, the start node, the end node and all connections
+// (triples of three ints from, to and length). Node numbers start from 0.
+// This does not keep track of the actual path. To do so, add 'int[] prev = new
+// int[n]' to the algorithm and in the if body, add 'prev[E[j].t] = E[j].f'.
+class BellmanFord
 {
 	public static void main(String[] args) throws Throwable
 	{
-		Scanner in = new Scanner(new File("tcr/sampledata/prim.in"));
+		Scanner in = new Scanner(new File("tcr/sampledata/dijkstra.in"));
 		int cases = in.nextInt();
 		while (cases-- > 0)
 		{
 			int n = in.nextInt(); // number of nodes
 			int m = in.nextInt(); // number of edges
-			List<Edge>[] edges = new ArrayList[n];
+			int start = in.nextInt();
+			int end = in.nextInt();
+			// undirected graph:
+//			m = 2*m;
+			Edge[] E = new Edge[m];
+			// directed graph:
+			for (int i = 0; i < m; i++)
+				E[i] = new Edge(in.nextInt(), in.nextInt(), in.nextInt());
+			// undirected graph:
+//			Edge[] E = new Edge[m];
+//			for (int i = 0, f, t, l; i < m; )
+//			{
+//				E[i++]=new Edge(f=in.nextInt(), t=in.nextInt(), l=in.nextInt());
+//				E[i++]=new Edge(t, f, l);
+//			}
+			int[] len = new int[n]; // len[i] = length from start node to node i
+			int max = 10000;        // max > sum(e[i].l)
+			Arrays.fill(len, max);  // WARNING: max + max(E[j].l) may overflow
+			len[start] = 0;
 			for (int i = 0; i < n; i++)
-				edges[i] = new ArrayList<Edge>();
-			// prim only works for undirected graphs:
-			for (int i = 0, f, t; i < m; i++)
-			{
-				Edge e = new Edge(f=in.nextInt(), t=in.nextInt(), in.nextInt());
-				edges[f].add(e);
-				edges[t].add(e);
-			}
-			List<Edge>[] tree = new ArrayList[n];
-			for (int i = 0; i < n; i++)
-				tree[i] = new ArrayList<Edge>();
-			boolean[] inTree = new boolean[n];
-			PriorityQueue<Edge> q = new PriorityQueue<Edge>();
-			inTree[0] = true;
-			for (Edge e : edges[0])
-				q.add(e);
-			while (!q.isEmpty())
-			{
-				Edge e = q.remove();
-				if (inTree[e.f] && inTree[e.t])
-					continue;
-				if (!inTree[e.t])
-					tree[e.f].add(e);
-				else
-					tree[e.t].add(e);
-				inTree[e.f] = inTree[e.t] = true;
-				for (Edge a : edges[e.t])
-					q.add(a);
-			}
-			for (List<Edge> l : tree)
-				for (Edge e : l)
-					System.out.println("("+e.f+", "+e.t+", ["+e.l+"])");
+				for (int j = 0; j < m; j++)
+					if (len[E[j].t] > len[E[j].f] + E[j].l)
+						len[E[j].t] = len[E[j].f] + E[j].l;
+			System.out.println(len[end]+" - "+Arrays.toString(len));
 		}
 	}
 	
-	private static class Edge implements Comparable<Edge>
+	private static class Edge
 	{
 		int f, t, l; // from, to and length
 		public Edge(int from, int to, int length)
 		{f=from; t=to; l=length;}
-		@Override public int compareTo(Edge e)
-		{return l - e.l;}
-	}
-}
-
-
-
-//Solution uses breadthfirst search in iterations. Each iteration is one step
-//further away from the root. Count all nodes that are visited after the 10th
-//iteration.
-//Interesting for this solution is the way in which the distance to the root is
-//kept track of. Iteration i starts with storing the size of the queue, which
-//contains all nodes that are located i+1 hops from the root. Then all these
-//nodes are processed, while adding new nodes to the queue. In the end of the
-//iteration i, the queue contains all nodes that are located i+2 hops from the
-//root.
-//
-//graph: boolean[][] as adjacency matrix
-//bfs:   add ints to a queue only if they are not yet visited, flag them as
-//   visited before adding them to the queue
-class ProblemB_dkp2005
-{
-	
-	public static void main(String[] args) throws Throwable
-	{
-		new ProblemB_dkp2005();
-	}
-	
-	public ProblemB_dkp2005() throws Throwable
-	{
-		Scanner in = new Scanner(new File("dkp2005/testdata/b.in"));
-		int cases = in.nextInt();
-		while (cases-- > 0)
-		{
-			// Read input; build adjacency matrix
-			int h = in.nextInt();
-			int c = in.nextInt();
-			boolean[][] conn = new boolean[h+1][h+1];
-			for (int i = 0, p, q; i < c; i++)
-				conn[p=in.nextInt()][q=in.nextInt()] = conn[q][p] = true;
-			int l = in.nextInt();
-			for (int i = 0, p, q; i < l; i++)
-				conn[p=in.nextInt()][q=in.nextInt()] = conn[q][p] = !conn[q][p];
-			
-			// Do breadthfirst in iterations
-			boolean[] visited = new boolean[h+1];
-			LinkedList<Integer> queue = new LinkedList<Integer>();
-			int u = 0;
-			visited[1] = true;
-			queue.addLast(1);
-			for (int hp = 0, s, i; !queue.isEmpty(); u += hp<=10 ? 0 : s, ++hp)
-				for (s = queue.size(), i = 0; i < s; i++)
-					for (int j = 1, n = queue.removeFirst(); j <= h; j++)
-						if (conn[n][j] && !visited[j])
-						{
-							visited[j] = true;
-							queue.addLast(j);
-						}
-			System.out.println(u);
-		}
 	}
 	
 }
 
 
 
-// Implementation of Floyd-Warshall. Input file specifies number of nodes,
-// number of edges and all connections (triples of three ints from, to and
-// length). Node numbers start from 0.
+// Implementation of Floyd-Warshall (all-pairs shortest path). Input file
+// specifies number of nodes, number of edges and all connections (triples of
+// three ints from, to and length). Node numbers start from 0.
 class FloydWarshall
 {
 	public static void main(String[] args) throws IOException
@@ -270,9 +206,214 @@ class FloydWarshall
 
 
 
+// Implementation of Kruskal (minimal spanning tree). Input file specifies
+// number of nodes, number of edges and all connections (triples of three ints
+// from, to and length). Node numbers start from 0.
+// Also useful for an astonishingly simple implementation of a disjoint-set.
+class Kruskal
+{
+	private static int[] parent;
+	private static int[] rank;
+	
+	public static void main(String[] args) throws Throwable
+	{
+		Scanner in = new Scanner(new File("tcr/sampledata/kruskal.in"));
+		int cases = in.nextInt();
+		while (cases-- > 0)
+		{
+			int n = in.nextInt();      // number of nodes
+			int m = in.nextInt(), s=0; // number of edges (in graph and in tree)
+			Edge[] edges = new Edge[m];
+			Edge[] tree = new Edge[n-1];
+			for (int i = 0; i < m; i++)
+				edges[i] = new Edge(in.nextInt(), in.nextInt(), in.nextInt());
+			parent = new int[n]; // disjoint-set
+			rank = new int[n];   // datastructure
+			for (int i = 0; i < n; i++)
+				parent[i] = i;
+			Arrays.sort(edges); // the sort is actually the slowest operation...
+			for (Edge e : edges)
+				if (join(e.x, e.y))
+					tree[s++] = e;
+			for (Edge e : tree)
+				System.out.println("("+e.x+", "+e.y+", ["+e.l+"])");
+		}
+	}
+	
+	private static int find(int x) // wow! short, huh?
+	{
+		return parent[x]==x ? x : (parent[x] = find(parent[x]));
+	}
+	
+	private static boolean join(int x, int y) //false if x and y are in same set
+	{
+		int xrt = find(x);
+		int yrt = find(y);
+		if (rank[xrt] > rank[yrt])
+			parent[yrt] = xrt;
+		else if (rank[xrt] < rank[yrt])
+			parent[xrt] = yrt;
+		else if (xrt != yrt)
+			rank[parent[yrt]=xrt]++;
+		return xrt != yrt;
+	}
+	
+	private static class Edge implements Comparable<Edge>
+	{
+		int x, y, l; // from, to and length
+		public Edge(int from, int to, int length)
+		{x=from; y=to; l=length;}
+		@Override public int compareTo(Edge e)
+		{return l - e.l;}
+	}
+}
+
+
+
+// Implementation of Edmonds-Karp, an improved Ford-Fulkerson (max-flow /
+// min-cut). Input file specifies number of nodes, number of edges, start and
+// end node and all connections (triples of three ints u, v and length). Node
+// numbers start from 0. Result is the actual flow. The min-cut can be found by
+// doing a BFS over all edges that still allow more flow. All edges from a
+// covered node to an uncovered node are now part of the min-cut.
+// This implementation concerns an undirected graph. For directed graphs one
+// also inserts the dual edge, but now with a capacity of 0. The rest of the
+// algorithm stays the same. An optimization may be to replace all (u,v)-edges
+// by one (u,v)-edge, whose capacity is the sum of all (u,v)-edges.
+// Note that an adjacency matrix is the easiest datastructure, with two
+// int[n][n] arrays for the capacity and the flow, all initialized to zeros.
+// With many nodes, however, this requires too much memory. 
+class EdmondsKarp
+{
+	public static void main(String[] args) throws Throwable
+	{
+		Scanner in = new Scanner(new File("tcr/sampledata/edmond-karps.in"));
+		int cases = in.nextInt();
+		while (cases-- > 0)
+		{
+			int n = in.nextInt(), m = in.nextInt();
+			int s = in.nextInt(), t = in.nextInt();
+			List<Edge>[] edges = new List[n];
+			for (int i = 0; i < n; i++)
+				edges[i] = new ArrayList<Edge>();
+			for (int i = 0; i < m; i++)
+			{
+				int u = in.nextInt(), v = in.nextInt(), c = in.nextInt();
+				Edge e1 = new Edge(u,v,c), e2 = new Edge(v,u,c);
+				e1.dual = e2; e2.dual = e1;
+				edges[u].add(e1);
+				edges[v].add(e2);
+			}
+			int[] pre = new int[n], que = new int[n], d = new int[n];
+			while (true)
+			{
+				// do BFS to find a path
+				Arrays.fill(pre, -1); pre[s] = s;
+				int p=0, q=0, u, v, j;
+				d[s] = Integer.MAX_VALUE;
+				que[q++] = s;
+				while (p < q && pre[t] < 0)
+					for (Edge e : edges[u=que[p++]])
+						if (pre[v=e.v] < 0 && (j=e.c-e.f) != 0)
+						{
+							pre[que[q++]=v] = u;
+							d[v] = Math.min(d[u], j);
+						}
+				// if no path found, stop the algorithm
+				if (pre[t] < 0) break;
+				// apply the flow on the found path
+				for (int i = t; i != s; i = pre[i])
+					for (Edge e : edges[pre[i]])
+						if (e.v == i)
+						{
+							e.f += d[t];
+							e.dual.f -= d[t];
+						}
+			}
+			// then, calculate the weight of the cut
+			int size = 0;
+			for (Edge e : edges[s])
+				size += e.f;
+			System.out.println(size * 1000);
+		}
+	}
+	
+	private static class Edge
+	{
+		int u, v, c, f;
+		Edge dual; // the dual of this edge
+		public Edge(int from, int to, int capacity)
+		{u=from; v=to; c=capacity;}
+		@Override
+		public String toString()
+		{return "("+u+","+v+") ["+f+"/"+c+"]";}
+	}
+}
+
+
+
+// Solves the following problem: given an unweighted graph, how many nodes are
+// 10 steps or more away from a certain node?
+// The input is quite problem specific, but the BFS is the interesting part. It
+// exploits an interesting property of the BFS algorithm: when all nodes that
+// are reachable in n-1 or fewer steps have been visited, the size of the queue
+// equals the number of nodes that are reachable in n steps, but not in n-1 or
+// fewer. Using this property, it is easy to keep track of the 'hop count' (see
+// the triple for-loop in the code).
+class ProblemB_dkp2005
+{
+	
+	public static void main(String[] args) throws Throwable
+	{
+		new ProblemB_dkp2005();
+	}
+	
+	public ProblemB_dkp2005() throws Throwable
+	{
+		Scanner in = new Scanner(new File("tcr/sampledata/b-dkp2005.in"));
+		int cases = in.nextInt();
+		while (cases-- > 0)
+		{
+			// Read input; build adjacency matrix
+			int h = in.nextInt();
+			int c = in.nextInt();
+			boolean[][] conn = new boolean[h+1][h+1];
+			for (int i = 0, p, q; i < c; i++)
+				conn[p=in.nextInt()][q=in.nextInt()] = conn[q][p] = true;
+			// Flip connections
+			int l = in.nextInt();
+			for (int i = 0, p, q; i < l; i++)
+				conn[p=in.nextInt()][q=in.nextInt()] = conn[q][p] = !conn[q][p];
+			
+			// Do breadthfirst in iterations
+			boolean[] visited = new boolean[h+1];
+			LinkedList<Integer> queue = new LinkedList<Integer>();
+			int u = 0;
+			visited[1] = true;
+			queue.addLast(1);
+			for (int hp = 0, s, i; !queue.isEmpty(); u += hp<=10 ? 0 : s, ++hp)
+				for (s = queue.size(), i = 0; i < s; i++)
+					for (int j = 1, n = queue.removeFirst(); j <= h; j++)
+						if (conn[n][j] && !visited[j])
+						{
+							visited[j] = true;
+							queue.addLast(j);
+						}
+			System.out.println(u);
+		}
+	}
+	
+}
+
+
+
 // Implementation of a breath-first search through a maze. Input file specifies
 // the height and width of the maze, followed by the maze itself. '#' is a wall,
 // '.' is a empty spot, 'S' is the start.
+// This implementation also keeps track of the route (and even prints it), but
+// usually is suffices to store only the step count.
+// Note that isValid can be quite a bit more complex. In particular, one usually
+// has to check the bounds first (!).
 class Maze
 {
 	static int h, w;
@@ -352,40 +493,22 @@ class Maze
 
 
 
-//Solution applies an O(n) algorithm for calculating the convex hull of a given
-//set of points. It first scans the points from left to right, creating the
-//upper half of the hull, and then from right to left, creating the lower half
-//of the hull.
-//Points are stored as objects, in order to sort them.
-//The coordinate system is defined as follows:
-//- x runs from left to right
-//- y runs from bottom to top
+// Implementation of a Convex Hull algorithm. Input is a set of points. A Point
+// is a tuple of two floating point numbers. It first scans the points from left
+// to right, creating the upper half of the hull, and then from right to left,
+// creating the lower half of the hull. This implementation avoids the use of
+// goniometry, by using the area function as the check to see if three points
+// form a convex line. The result is a list of points on the conves hull in
+// clockwise order, starting with the leftmost point.
+// The coordinate system is defined as follows:
+// - x runs from left to right
+// - y runs from bottom to top
 class ConvexHull
 {
 	
 	public static final double EPSILON = 0.0001;
-	public static final int N = 100000;
 	
-	public static void main(String[] args)
-	{
-		Random r = new Random();
-		Point[] points = new Point[N];
-		for (int i = 0; i < N; i++)
-			// for a rectangular cloud:
-			points[i] = new Point(r.nextDouble()*380+10, r.nextDouble()*380+10);
-		Arrays.sort(points);
-		
-		// compute the hull
-		Point[] hull = getConvexHull(points);
-		
-		// print area of the hull
-		double area = 0;
-		for (int i = 2; i < hull.length; i++)
-			area += area(hull[0], hull[i], hull[i-1]);
-		System.out.println(area);
-	}
-
-	private static Point[] getConvexHull(Point[] p)
+	public static Point[] getConvexHull(Point[] p)
 	{
 		Arrays.sort(p);
 		List<Point> hull = new ArrayList<Point>();
@@ -439,9 +562,9 @@ class ConvexHull
 
 
 
-//Calculates the area of a triangle, given the lengths of the sides. This can be
-//usefull if the points of the triangle are not known (otherwise, just use the
-//formula which is used in the ConvexHull class, just above here).
+// Calculates the area of a triangle, given the lengths of the sides. This can
+// be usefull if the points of the triangle are not known (otherwise, just use
+// the formula which is used in the ConvexHull class, just above here).
 class Heron
 {
 	// a, b and c are the lengths of a triangle.
@@ -457,12 +580,11 @@ class Heron
 
 
 
-//OULIPO, by Jan Kuipers
-//Solution uses an O(n+m) algorithm, instead of the naive O(n*m) algorithm.
-//First, the needle is preprocessed so we know where to jump to when we
-//encounter a different character during the search, removing the need to jump
-//back to the start of the needle and then advancing only 1 character to find
-//the next match.
+// Solves the following problem: given two words, S and T, is S a substring of
+// T? Na•ve solutions use an O(n*m) algorithm, while this is only O(n+m).
+// First, S is preprocessed so we know where to jump to when we encounter a
+// different character during the search through T, then we search linearly
+// through T.
 class ProblemG_dkp2006
 {
 	
@@ -515,25 +637,31 @@ class ProblemG_dkp2006
 
 
 
-//Solve the problem by making a bipartite graph with the catlovers as the first
-//set of nodes and the dog lovers as the other set of nodes. A catlover and a
-//doglover are connected if their votes are incompatible. Then, find a maximal
-//matching and use Kšnigs Theorem to convert it to a Minimum Vertex Cover and
-//thus the answer.
+// Solves the following problem: given two arbitrary groups of items A and B and
+// a set of agents, each agent of which votes to remove a certain item from one
+// group and to keep a certain item from the other group. For how many agents
+// can both votes be satisfied?
+// Making a bipartite graph with the agents that want to keep an item from A
+// (A-lovers) as the first set of nodes and the other agents (B-lovers) as the
+// other set of nodes. An A-lover and a B-lover are connected if their votes are
+// incompatible. Then, the solution is the number of vertices that are not in
+// the minimum vertex cover. Now, find a maximal matching and use Kšnigs Theorem
+// to get the answer.
+// Note: in the implementation below, group A are cats and group B are dogs.
 //
-//Kšnigs theorem reads as follows:
-//In any bipartite graph, the number of edges in a maximum matching is equal to
-//the number of vertices in a minimum vertex cover.
+// Kšnigs theorem reads as follows:
+// In any bipartite graph, the number of edges in a maximum matching is equal to
+// the number of vertices in a minimum vertex cover.
 //
-//Construct a vertex cover from a maximum matching as follows:
-//Consider a bipartite graph where the vertices are partitioned into left (L)
-//and right (R) sets. Suppose there is a maximum matching which partitions the
-//edges into those used in the matching (Em) and those not (E0). Let T consist
-//of all unmatched vertices from L, as well as all vertices reachable from those
-//by going left-to-right along edges from E0 and right-to-left along edges from
-//Em. This essentially means that for each unmatched vertex in L, we add into T
-//all vertices that occur in a path alternating between edges from E0 and Em.
-//Then (L \ T) union (R disjun T) is a minimum vertex cover.
+// If the actual vertex cover is needed, construct it as follows:
+// Consider a bipartite graph where the vertices are partitioned into left (L)
+// and right (R) sets. Suppose there is a maximum matching which partitions the
+// edges into those used in the matching (Em) and those not (E0). Let T consist
+// of all unmatched vertices from L, as well as all vertices reachable from
+// those by going left-to-right along edges from E0 and right-to-left along
+// edges from Em. This essentially means that for each unmatched vertex in L, we
+// add into T all vertices that occur in a path alternating between edges from
+// E0 and Em. Then (L \ T) union (R disjun T) is a minimum vertex cover.
 class ProblemC_ekp2008
 {
 
@@ -546,7 +674,7 @@ class ProblemC_ekp2008
 
 	public static void main(String[] args) throws Throwable
 	{
-		Scanner in = new Scanner(new File("ekp2008\\testdata\\c.in"));
+		Scanner in = new Scanner(new File("tcr/sampledata/c-ekp2008.in"));
 		int cases = in.nextInt();
 		while (cases-- > 0)
 		{
@@ -580,8 +708,7 @@ class ProblemC_ekp2008
 			prev = new int[v];  // the previous node in the alternating path
 			Arrays.fill(match, -1);
 			Arrays.fill(prev, -1);
-			Queue<Integer> q = new LinkedList<Integer>(); // used later
-			boolean[] inT = new boolean[v];
+			int matches = 0;
 			
 			// apply matching algorithm
 			for (int i = 0; i < v; i++)
@@ -592,7 +719,7 @@ class ProblemC_ekp2008
 				int curr = bfs(i), next;
 				// special case: no end means cat is in T
 				if (curr == -1)
-					inT[i] = q.add(i);
+					continue;
 				// flip the matching on the path
 				while (curr != -1)
 				{
@@ -602,24 +729,11 @@ class ProblemC_ekp2008
 					prev[curr] = prev[prev[curr]] = -1;
 					curr = next;
 				}
+				// count the match
+				matches++;
 			}
 			
-			// construct T (see Königs Theorem)
-			while (!q.isEmpty())
-			{
-				int i = q.remove();
-				for (int j = 0; j < numEdges[i]; j++)
-					if (!inT[edges[i][j]] &&
-							((type[i] == 'C') != (edges[i][j] == match[i])))
-						inT[edges[i][j]] = q.add(edges[i][j]);
-			}
-			
-			// get the answer
-			int answer = 0;
-			for (int i = 0; i < v; i++)
-				if ((type[i] == 'C') == inT[i])
-					answer++;
-			System.out.println(answer);
+			System.out.println(v-matches);
 		}
 	}
 	
@@ -651,15 +765,15 @@ class ProblemC_ekp2008
 
 
 
-//Calculates the polygon triangulation by applying a well known O(n*log(n))
-//algorithm. It first divides the polygon into monotone polygons (returned as a
-//list of circular doubly linked lists) in O(n*log(n)) time, and then splits the
-//monotone polygons into triangles in O(n) time. Unfortunately, a balanced
-//binary search tree is vital to gain the O(n*log(n)) time, hence the existence
-//of an entire AATree implementation.
-//The coordinate system is defined as follows:
-//- x runs from left to right
-//- y runs from bottom to top
+// Calculates the polygon triangulation by applying a well known O(n*log(n))
+// algorithm. It first divides the polygon into monotone polygons (returned as a
+// list of circular doubly linked lists) in O(n*log(n)) time, and then splits
+// the monotone polygons into triangles in O(n) time. Unfortunately, a balanced
+// binary search tree is vital to gain the O(n*log(n)) time, hence the existence
+// of an entire AATree implementation.
+// The coordinate system is defined as follows:
+// - x runs from left to right
+// - y runs from bottom to top
 class Triangulation
 {
 	
@@ -1090,15 +1204,20 @@ class Triangulation
 
 
 
-//Solve tree isomorphism recursively. Speed up by cutting backtracking
-//immediately if the number of children or the number of successors of two nodes
-//are unequal.
-class ProblemE_ekp2003
+// Solves the following problem: given two trees, are they isomorph?
+// A tree is represented by a root node. Each node has a list of 0 or more
+// children and stores the total number of children (successors). The parent
+// doesn't have to be known. The algorithm now tries all possibilities to map
+// the nodes of one tree to the nodes of the other.
+// Uses a speed up by cutting backtracking immediately if the number of children
+// or the number of successors of two nodes are unequal.
+// Note: the input is highly problem specific. Don't bother reading it.
+class TreeIsomorphism //ProblemE_ekp2003
 {
 	
 	public static void main(String[] args) throws Throwable
 	{
-		Scanner in = new Scanner(new File("ekp2003/testdata/e.in"));
+		Scanner in = new Scanner(new File("tcr/sampledata/e-ekp2003.in"));
 		int cases = in.nextInt();
 		while (cases-- > 0)
 		{
@@ -1172,78 +1291,42 @@ class ProblemE_ekp2003
 	}
 }
 
-/* Binomial in Python:
 
-def fac(n):
-	if (n <= 1):
-		return 1
-	return n*fac(n-1)
 
-def binom(n,k):
-	return fac(n) / (fac(k)*fac(n-k))
-
- */
+// Calculates the binomial coefficient of n over k: binom(n, k) = n! / k!*(n-k)!
+// This is the number of k-element subsets of an n-element set. In other words,
+// the number of combinations without repetition where order is irrelevant.
+// To calculate the number of combinations with repetition, where order is again
+// irrelevant, calculate binom(n+k-1, k).
 class Binomial
 {
-	public static void main(String[] args) throws Throwable
-	{
-		Scanner in = new Scanner(new File("tcr/sampledata/binomial.in"));
-		int cases = in.nextInt();
-		while (cases-- > 0)
-		{
-			int n = in.nextInt();
-			int k = in.nextInt();
-			System.out.println(binom(n, k));
-		}
-	}
-	
-	private static long binom(int n, int k)
+	// Guaranteed not to overflow, as long as the answer fits into 53 bits.
+	public static long binom(int n, int k)
 	{
 		if (k > n/2)
 			k = n-k;
 		double ans = 1;
-		while (k > 0)
-		{
-			ans *= n/k;
-			n--;
-			k--;
-		}
+		for (; k > 0; k--, n--)
+			ans *= (double)n/k;
 		return Math.round(ans); // discard rounding errors
 	}
 }
 
 
 
-//Two numerically stable methods that can be used when speed is really important
-//and when big numbers are involved.
-class BigNumbers
+// Two GCD algorithms. The binary is 10% to 60% faster, but it highly depends on
+// the platform. For safety, just choose the simple euclidean one, which should
+// not make a difference in a programming contest.
+class GCD
 {
-	
-	// Computes (b^e) mod m, where m <= 3.037.000.500
-	// If long is replaced by int, then m <= 46.341
-	public static long modexp(long b, long e, long m)
+	// Marginally faster then the euclidean gcd algorithm.
+	public static int gcd_binary(int u, int v)
 	{
-		long x = 1;
-		b = b % m;
-		while (e > 0)
-		{
-			if ((e&1)==1)
-				x = (x*b)%m;
-			e >>= 1;
-			b = (b*b)%m;
-		}
-		return x;
-	}
-	
-	// Computes gcd(u, v), where u and v are both positive.
-	public static int gcd(int u, int v)
-	{
-		int k, t, d;
+		int k, d;
 		if (u == 0) return v;
 		if (v == 0) return u;
-		// Find common factors of 2.
-		for (k = 0, t = (u|v); (t&1)==0; t >>= 1, k++);
 		// Remove common factors of 2.
+		k = Integer.numberOfTrailingZeros(u|v);
 		u >>= k; v >>= k;
 		// Calculate the remaining gcd.
 		// First, initiate the value of d.
@@ -1260,5 +1343,41 @@ class BigNumbers
 		return u << k;
 	}
 	
+	// Marginally slower then the binary gcd algorithm.
+	public static int gcd_euclidean(int a, int b)
+	{
+		for (int t; b != 0; a = t)
+			b = a % (t=b);
+		return a;
+	}
+	
+	// And off course the least common multiple.
+	public static int lcm(int a, int b)
+	{
+		return (a|b)==0 ? 0 : (int)((long)a*b/gcd_euclidean(a,b));
+	}
+	
 }
 
+
+
+// Computes (b^e) mod m, where m <= 3.037.000.500
+// If long is replaced by int, then m <= 46.341
+// Probably only useful for implementing the RSA encryption algorithm.
+// (Or any other place where b^e would be astronomically large.)
+class ModularExponentiation
+{
+	public static long modexp(long b, long e, long m)
+	{
+		long x = 1;
+		b = b % m;
+		while (e > 0)
+		{
+			if ((e&1)==1)
+				x = (x*b)%m;
+			e >>= 1;
+			b = (b*b)%m;
+		}
+		return x;
+	}
+}
