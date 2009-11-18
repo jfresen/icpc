@@ -2,6 +2,8 @@ package tcr;
 import java.io.*;
 import java.util.*;
 
+import tcr.meetkunde.Visualizer;
+
 // Implementation of breath first search. Input file specifies number of nodes,
 // number of edges, the start node, the end node and all connections (tuples of
 // two ints from and to). For finding a shortest path in a weighted graph, use
@@ -493,93 +495,6 @@ class Maze
 
 
 
-// Implementation of a Convex Hull algorithm. Input is a set of points. A Point
-// is a tuple of two floating point numbers. It first scans the points from left
-// to right, creating the upper half of the hull, and then from right to left,
-// creating the lower half of the hull. This implementation avoids the use of
-// goniometry, by using the area function as the check to see if three points
-// form a convex line. The result is a list of points on the conves hull in
-// clockwise order, starting with the leftmost point.
-// The coordinate system is defined as follows:
-// - x runs from left to right
-// - y runs from bottom to top
-class ConvexHull
-{
-	
-	public static final double EPSILON = 0.0001;
-	
-	public static Point[] getConvexHull(Point[] p)
-	{
-		Arrays.sort(p);
-		List<Point> hull = new ArrayList<Point>();
-		hull.add(p[0]);
-		for (int i = 1, min = hull.size()+1; i < p.length; i++)
-		{
-			hull.add(p[i]);
-			while (hull.size() > min && !endsWithRightTurn(hull))
-				hull.remove(hull.size()-2);
-		}
-		for (int i = p.length-2, min = hull.size()+1; i >= 0; i--)
-		{
-			hull.add(p[i]);
-			while (hull.size() > min && !endsWithRightTurn(hull))
-				hull.remove(hull.size()-2);
-		}
-		hull.remove(hull.size()-1);
-		return hull.toArray(new Point[hull.size()]);
-	}
-	
-	private static boolean endsWithRightTurn(List<Point> hull)
-	{
-		Point a = hull.get(hull.size()-3);
-		Point b = hull.get(hull.size()-2);
-		Point c = hull.get(hull.size()-1);
-		return area(a, b, c) < -EPSILON;
-	}
-	
-	private static double area(Point a, Point b, Point c)
-	{
-		return (a.x*b.y - a.y*b.x + a.y*c.x - a.x*c.y + b.x*c.y - c.x*b.y) / 2;
-	}
-	
-	public static class Point implements Comparable<Point>
-	{
-		public double x, y;
-		public Point(double x, double y)
-		{this.x = x; this.y = y;}
-		@Override
-		public int compareTo(Point that)
-		{
-			if (this.x < that.x) return -1;
-			if (this.x > that.x) return  1;
-			if (this.y < that.y) return -1;
-			if (this.y > that.y) return  1;
-			return 0;
-		}
-	}
-
-}
-
-
-
-// Calculates the area of a triangle, given the lengths of the sides. This can
-// be usefull if the points of the triangle are not known (otherwise, just use
-// the formula which is used in the ConvexHull class, just above here).
-class Heron
-{
-	// a, b and c are the lengths of a triangle.
-	public static double area(double a, double b, double c)
-	{
-		double t;
-		if (b > a) {t = a; a = b; b = t;}
-		if (c > a) {t = a; a = c; c = t;}
-		if (c > b) {t = b; b = c; c = t;}
-		return Math.sqrt((a+(b+c))*(c-(a-b))*(c+(a-b))*(a+(b-c)))/4;
-	}
-}
-
-
-
 // Solves the following problem: given two words, S and T, is S a substring of
 // T? Na•ve solutions use an O(n*m) algorithm, while this is only O(n+m).
 // First, S is preprocessed so we know where to jump to when we encounter a
@@ -761,6 +676,93 @@ class ProblemC_ekp2008
 		return -1;
 	}
 	
+}
+
+
+
+//Implementation of a Convex Hull algorithm. Input is a set of points. A Point
+//is a tuple of two floating point numbers. It first scans the points from left
+//to right, creating the upper half of the hull, and then from right to left,
+//creating the lower half of the hull. This implementation avoids the use of
+//goniometry, by using the area function as the check to see if three points
+//form a convex line. The result is a list of points on the conves hull in
+//clockwise order, starting with the leftmost point.
+//The coordinate system is defined as follows:
+//- x runs from left to right
+//- y runs from bottom to top
+class ConvexHull
+{
+	
+	public static final double EPSILON = 0.0001;
+	
+	public static Point[] getConvexHull(Point[] p)
+	{
+		Arrays.sort(p);
+		List<Point> hull = new ArrayList<Point>();
+		hull.add(p[0]);
+		for (int i = 1, min = hull.size()+1; i < p.length; i++)
+		{
+			hull.add(p[i]);
+			while (hull.size() > min && !endsWithRightTurn(hull))
+				hull.remove(hull.size()-2);
+		}
+		for (int i = p.length-2, min = hull.size()+1; i >= 0; i--)
+		{
+			hull.add(p[i]);
+			while (hull.size() > min && !endsWithRightTurn(hull))
+				hull.remove(hull.size()-2);
+		}
+		hull.remove(hull.size()-1);
+		return hull.toArray(new Point[hull.size()]);
+	}
+	
+	private static boolean endsWithRightTurn(List<Point> hull)
+	{
+		Point a = hull.get(hull.size()-3);
+		Point b = hull.get(hull.size()-2);
+		Point c = hull.get(hull.size()-1);
+		return area(a, b, c) < -EPSILON;
+	}
+	
+	private static double area(Point a, Point b, Point c)
+	{
+		return (a.x*b.y - a.y*b.x + a.y*c.x - a.x*c.y + b.x*c.y - c.x*b.y) / 2;
+	}
+	
+	public static class Point implements Comparable<Point>
+	{
+		public double x, y;
+		public Point(double x, double y)
+		{this.x = x; this.y = y;}
+		@Override
+		public int compareTo(Point that)
+		{
+			if (this.x < that.x) return -1;
+			if (this.x > that.x) return  1;
+			if (this.y < that.y) return -1;
+			if (this.y > that.y) return  1;
+			return 0;
+		}
+	}
+
+}
+
+
+
+//Calculates the area of a triangle, given the lengths of the sides. This can
+//be usefull if the points of the triangle are not known (otherwise, just use
+//the formula which is used in the ConvexHull class, just above here).
+class Heron
+{
+	// a, b and c are the lengths of a triangle.
+	public static double area(double a, double b, double c)
+	{
+		double t;
+		if (b > a) {t = a; a = b; b = t;}
+		if (c > a) {t = a; a = c; c = t;}
+		if (c > b) {t = b; b = c; c = t;}
+		return Math.sqrt((a+(b+c))*(c-(a-b))*(c+(a-b))*(a+(b-c)))/4;
+	}
 }
 
 
@@ -1204,7 +1206,203 @@ class Triangulation
 
 
 
-// Solves the following problem: given two trees, are they isomorph?
+class DelaunayTriangulation
+{
+	
+	public static void main(String[] args)
+	{
+		int n = 200;
+		Point[] p = new Point[n];
+		Random r = new Random(18);
+		for (int i = 0; i < n; i++)
+		{
+//			Point point = new Point(r.nextInt(380)+10, r.nextInt(380)+10);
+			double radius = Math.sqrt(r.nextDouble())*190;
+			double alpha = r.nextDouble()*2*Math.PI;
+			int x = (int)(Math.cos(alpha)*radius);
+			int y = (int)(Math.sin(alpha)*radius);
+			Point point = new Point(200+x, 200+y);
+			if (!Arrays.asList(p).contains(point))
+				p[i] = point;
+			else
+				i--;
+		}
+		Triangle[] tri = delaunayTriangulation(p);
+		Visualizer.showDelaunayTriangulation(tri, p);
+	}
+	
+	private static Triangle[] delaunayTriangulation(Point[] p)
+	{
+		Arrays.sort(p);
+		List<Triangle> tri = new ArrayList<Triangle>();
+		int i = 0; double A = 0;
+		// initialize first triangle(s)
+		for (; i < p.length && (A=area(p[i], p[0], p[1])) == 0; i++);
+		if (i == p.length) return null; //impossible if all points are collinear
+		Triangle prev = null;
+		// insert first triangle(s)
+		for (int j = 0; j < i-1; j++)
+		{
+			// A > 0: p[i], p[j], p[j+1]
+			// A < 0: p[i], p[j+1], p[j]
+			Triangle t = new Triangle(p[i], p[A>0 ? j : j+1], p[A>0 ? j+1 : j]);
+			t.add(prev);
+			tri.add(t);
+			prev = tri.get(tri.size()-1);
+		}
+		// add all remainig points
+		for (i++; i < p.length; i++)
+		{
+			Triangle s = prev;
+			int si = s.getTi(prev = null);
+			// find first triangle below last point which is not visible
+			for (boolean goBack = true; goBack; goBack = area(p[i], s.p[(si+1)%3], s.p[si]) > 0)
+			{
+				// walk backward over the hull
+				int spi = (si+2)%3;
+				while (s.t[spi] != null)
+				{
+					si = s.t[spi].getTi(s);
+					s = s.t[spi];
+					spi = (si+2)%3;
+				}
+				si = spi;
+			}
+			// connect p[i] with all visible triangles
+			Queue<Triangle> q = new LinkedList<Triangle>();
+			while (true)
+			{
+				// walk forward over the hull
+				int sni = (si+1)%3;
+				while (s.t[sni] != null)
+				{
+					si = s.t[sni].getTi(s);
+					s = s.t[sni];
+					sni = (si+1)%3;
+				}
+				si = sni;
+				// visibility test
+				if (area(p[i], s.p[(si+1)%3], s.p[si]) <= 0)
+					break;
+				// add triangle
+				Triangle t = new Triangle(p[i], s.p[(si+1)%3], s.p[si]);
+				t.add(s);
+				t.add(prev);
+				tri.add(t);
+				s.prev = t;
+				q.add(s);
+				prev = t;
+			}
+			// flip edges to meet the delaunay constraint
+			while (!q.isEmpty())
+				(s=q.remove()).makeDelaunay(s.prev, q);
+		}
+		return tri.toArray(new Triangle[tri.size()]);
+	}
+	
+	private static double area(Point a, Point b, Point c)
+	{
+		long bycy = b.y - c.y;
+		long cyay = c.y - a.y;
+		long ayby = a.y - b.y;
+		return (a.x*bycy + b.x*cyay + c.x*ayby) / 2.0;
+	}
+	
+	private static class Triangle implements tcr.meetkunde.Triangle
+	{
+		Point[] p = new Point[3];
+		Triangle[] t = new Triangle[3];
+		Triangle prev = null;
+		public Triangle(Point p0, Point p1, Point p2)
+		{
+			p[0] = p0; p[1] = p1; p[2] = p2;
+		}
+		public void add(Triangle that)
+		{
+			if (that == null) return;
+			for (int i = 0; i < 3; i++)
+				for (int j = 0; j < 3; j++)
+					if (this.p[i] == that.p[(j+1)%3] && this.p[(i+1)%3] == that.p[j])
+						(this.t[i] = that).t[j] = this;
+		}
+		private int getTi(Triangle that)
+		{
+			if (t[0] == that) return 0;
+			if (t[1] == that) return 1;
+			if (t[2] == that) return 2;
+			return -1;
+		}
+		private boolean inCircle(Point p)
+		{
+			long a = this.p[0].x - p.x;
+			long b = this.p[0].y - p.y;
+			long c = a*a + b*b;
+			long d = this.p[1].x - p.x;
+			long e = this.p[1].y - p.y;
+			long f = d*d + e*e;
+			long g = this.p[2].x - p.x;
+			long h = this.p[2].y - p.y;
+			long i = g*g + h*h;
+			long det = a*e*i - a*f*h + b*f*g - b*d*i + c*d*h - c*e*g;
+			return det >= 0;
+		}
+		public void makeDelaunay(Triangle that, Queue<Triangle> q)
+		{
+			int ti = this.getTi(that);
+			int tj = that.getTi(this);
+			if (inCircle(that.p[(tj+2)%3]))
+			{
+				int ti1 = (ti+1)%3, tj1 = (tj+1)%3;
+				int ti2 = (ti+2)%3, tj2 = (tj+2)%3;
+				this.p[ti1] = that.p[tj2];
+				that.p[tj1] = this.p[ti2];
+				this.t[ti] = that.t[tj1];
+				that.t[tj] = this.t[ti1];
+				this.t[ti1] = that;
+				that.t[tj1] = this;
+				if (this.t[ti] != null) this.t[ti].t[this.t[ti].getTi(that)] = this;
+				if (that.t[tj] != null) that.t[tj].t[that.t[tj].getTi(this)] = that;
+				if (this.t[ti2] != null) q.add((this.t[ti2].prev = this).t[ti2]);
+				if (that.t[tj]  != null) q.add((that.t[tj].prev = that).t[tj]);
+			}
+		}
+		@Override public tcr.meetkunde.Point get(int i) {return p[i];}
+	}
+	
+	private static class Point implements Comparable<Point>, tcr.meetkunde.Point
+	{
+		int x, y;
+		public Point(int x, int y)
+		{this.x=x; this.y=y;}
+		@Override
+		public int compareTo(Point that)
+		{
+			if (this.x != that.x)
+				return this.x - that.x;
+			return this.y - that.y;
+		}
+		@Override
+		public boolean equals(Object o)
+		{
+			if (!(o instanceof Point))
+				return false;
+			Point that = (Point)o;
+			return this.x == that.x && this.y == that.y;
+		}
+		@Override public double getX() {return x;}
+		@Override public double getY() {return y;}
+		@Override public int igetX() {return x;}
+		@Override public int igetY() {return y;}
+//		@Override public void setX(int x) {this.x=x;}
+//		@Override public void setY(int y) {this.y=y;}
+//		@Override public void setX(double x) {this.x=(int)x;}
+//		@Override public void setY(double y) {this.y=(int)y;}
+	}
+}
+
+
+
+// Solves the following problem: given two trees, are they isomorphic?
 // A tree is represented by a root node. Each node has a list of 0 or more
 // children and stores the total number of children (successors). The parent
 // doesn't have to be known. The algorithm now tries all possibilities to map
@@ -1212,6 +1410,8 @@ class Triangulation
 // Uses a speed up by cutting backtracking immediately if the number of children
 // or the number of successors of two nodes are unequal.
 // Note: the input is highly problem specific. Don't bother reading it.
+// Note: in the original problem, the roots were fixed. This implementation
+// also allows different roots, which is more general.
 class TreeIsomorphism //ProblemE_ekp2003
 {
 	
@@ -1223,17 +1423,24 @@ class TreeIsomorphism //ProblemE_ekp2003
 		{
 			char[] s = in.next().toCharArray();
 			char[] t = in.next().toCharArray();
-			Node sroot = new Node(null);
-			Node troot = new Node(null);
-			makeTree(sroot, s);
-			makeTree(troot, t);
-			sroot.makeChildren();
-			troot.makeChildren();
-			if (isomorph(sroot, troot))
+			Node[] t1 = new Node[s.length/2 + 1];
+			Node[] t2 = new Node[t.length/2 + 1];
+			makeTree(t1, s);
+			makeTree(t2, t);
+			if (isIsomorph(t1, t2))
 				System.out.println("same");
 			else
 				System.out.println("different");
 		}
+	}
+	
+	private static boolean isIsomorph(Node[] s, Node[] t)
+	{
+		setRoot(s[0], s.length);
+		for (int i = 0; i < t.length; i++)
+			if (isomorph(s[0], setRoot(t[i], t.length)))
+				return true;
+		return false;
 	}
 	
 	private static boolean isomorph(Node n, Node m)
@@ -1246,24 +1453,29 @@ class TreeIsomorphism //ProblemE_ekp2003
 		boolean[] used = new boolean[m.children.length];
 		for (int i = 0; i < n.children.length && found; i++)
 		{
+			if (n.children[i] == n.parent)
+				continue;
 			found = false;
 			for (int j = 0; j < m.children.length && !found; j++)
 			{
-				if (used[j]) continue;
+				if (used[j] || m.children[j] == m.parent)
+					continue;
 				used[j] = found = isomorph(n.children[i], m.children[j]);
 			}
 		}
 		return found;
 	}
 	
-	private static void makeTree(Node root, char[] s)
+	private static void makeTree(Node[] tree, char[] s)
 	{
+		int size = 0;
+		Node root = tree[size++] = new Node(null);
 		for (int i = 0; i < s.length; i++)
 			if (s[i] == '0')
 			{
-				Node n = new Node(root);
-				root.childrenArray.add(n);
-				root = n;
+				tree[size] = new Node(root);
+				root.childrenArray.add(tree[size]);
+				root = tree[size++];
 			}
 			else
 			{
@@ -1272,6 +1484,29 @@ class TreeIsomorphism //ProblemE_ekp2003
 				root = root.parent;
 				root.successors += successors;
 			}
+		tree[0].makeChildren();
+	}
+	
+	private static Node setRoot(Node node, int n)
+	{
+		Node newParent = null;
+		// walk up to the old root to set the new parent
+		while (node != null)
+		{
+			Node next = node.parent;
+			node.parent = newParent;
+			newParent = node;
+			node = next;
+		}
+		// walk back to the new root to set the number of successors
+		node = newParent;
+		while (node.parent != null)
+		{
+			node.successors = n - node.parent.successors - 2;
+			node = node.parent;
+		}
+		node.successors = n - 1;
+		return node;
 	}
 	
 	private static class Node
@@ -1281,7 +1516,7 @@ class TreeIsomorphism //ProblemE_ekp2003
 		public Node[] children;
 		public int successors = 0;
 		public Node(Node parent)
-		{this.parent = parent;}
+		{this.parent = parent; if (parent != null) childrenArray.add(parent);}
 		public void makeChildren()
 		{
 			children = new Node[childrenArray.size()];

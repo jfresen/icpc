@@ -73,7 +73,7 @@ public class ConvexHull
 		return (a.x*b.y - a.y*b.x + a.y*c.x - a.x*c.y + b.x*c.y - c.x*b.y) / 2;
 	}
 	
-	public static class Point implements Comparable<Point>
+	public static class Point implements Comparable<Point>, tcr.meetkunde.Point
 	{
 		public double x, y;
 		public Point(double x, double y)
@@ -90,6 +90,14 @@ public class ConvexHull
 			if (this.y > that.y) return  1;
 			return 0;
 		}
+		@Override public double getX() {return x;}
+		@Override public double getY() {return y;}
+		@Override public int igetX() {return (int)x;}
+		@Override public int igetY() {return (int)y;}
+//		@Override public void setX(int x) {this.x=x;}
+//		@Override public void setY(int y) {this.y=y;}
+//		@Override public void setX(double x) {this.x=x;}
+//		@Override public void setY(double y) {this.y=y;}
 	}
 
 }

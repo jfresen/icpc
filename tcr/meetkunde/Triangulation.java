@@ -55,10 +55,7 @@ public class Triangulation
 		}
 		
 		// compute the monotones
-		List<Point> monotones = monotonize(points);
-		// convert the monotones to triangles
-		Point[] triangles = new Point[(n-2)*3];
-		triangulate(monotones, triangles);
+		Point[] triangles = triangulate(points);
 		
 		// calculate area of the polygon
 		double area = 0;
@@ -69,7 +66,10 @@ public class Triangulation
 	
 	public static double area(Point a, Point b, Point c)
 	{
-		return (a.x*b.y - a.y*b.x + a.y*c.x -a.x*c.y + b.x*c.y - c.x*b.y) / 2.0;
+		double bycy = b.y - c.y;
+		double cyay = c.y - a.y;
+		double ayby = a.y - b.y;
+		return (a.x*bycy + b.x*cyay + c.x*ayby) / 2.0;
 	}
 	
 	public static boolean isClockWise(Point a, Point b, Point c)
@@ -82,75 +82,27 @@ public class Triangulation
 		return u==p ? isClockWise(u,v,w) : isClockWise(u,w,v);
 	}
 	
-	private static void triangulate(List<Point> monotones, Point[] triangles)
-	{
-		int t = 0;
-		for (Point p : monotones)
-		{
-			// Bring p to the top
-			while (!p.isAbove(p.prev)) p = p.prev;
-			while (!p.isAbove(p.next)) p = p.next;
-			Point u, v, w, q = p;
-			// Initialize the stack with the two topmost points
-			LinkedList<Point> s = new LinkedList<Point>();
-			s.push(p);
-			s.push(p.next.isAbove(q.prev) ? (p=p.next) : (q=q.prev));
-			// Continue untill there is one point left
-			while (p.next != q.prev)
-			{
-				// Pick the next highest point
-				u = p.next.isAbove(q.prev) ? (p=p.next) : (q=q.prev);
-				// Is this point in the same chain as the top of the stack?
-				boolean dfChs = u.next != s.peek() && u.prev != s.peek();
-				// Remove from the stack, in two different situations
-				v = dfChs ? s.removeLast() : s.pop();
-				// Continue there are no more triangles to make
-				while (!s.isEmpty() && (dfChs || isTriangle(p, u, v, s.peek())))
-				{
-					w = dfChs ? s.removeLast() : s.pop();
-					triangles[t++] = u;
-					triangles[t++] = u==p ? w : v;
-					triangles[t++] = u==p ? v : w;
-					v = w;
-				}
-				s.push(v);
-				s.push(u);
-			}
-			boolean sInP = s.peek() == p;
-			u = p.next;
-			v = s.pop();
-			while (!s.isEmpty())
-			{
-				w = s.pop();
-				triangles[t++] = u;
-				triangles[t++] = sInP ? w : v;
-				triangles[t++] = sInP ? v : w;
-				v = w;
-			}
-		}
-	}
-	
 	// in: points given in counterclockwise order, forming a simple polygon
 	// out: 3*n points for n triangles, each [3k ... 3k+2] points is 1 triangle
-//	public static Point[] triangulate(Point[] p)
-	public static List<Point> monotonize(Point[] pOriginal)
+	public static Point[] triangulate(Point[] pOriginal)
 	{
 		int n = pOriginal.length;
-		Point[] p = new Point[n];
-		System.arraycopy(pOriginal, 0, p, 0, n);
+		Point[] pts = new Point[n];
+		System.arraycopy(pOriginal, 0, pts, 0, n);
+		// A map to find the edge from a point to the next point, in ccw order
 		e = new HashMap<Point, Edge>();
 		for (int i = 0; i < n; i++)
 		{
-			p[(i+1)%n].prev = p[i];
-			p[(i+1)%n].next = p[(i+2)%n];
-			e.put(p[i], new Edge(p[i], p[(i+1)%n]));
+			pts[(i+1)%n].prev = pts[i];
+			pts[(i+1)%n].next = pts[(i+2)%n];
+			e.put(pts[i], new Edge(pts[i], pts[(i+1)%n]));
 		}
 		
 		// Subdivide into monotone polygons
-		Arrays.sort(p);
+		Arrays.sort(pts);
 		AATree tree = new AATree();
 		monotones = new ArrayList<Point>();
-		for (Point vi : p)
+		for (Point vi : pts)
 		{
 			Edge ei, ei1, ej;
 			switch (getType(vi))
@@ -205,7 +157,55 @@ public class Triangulation
 					break;
 			}
 		}
-		return monotones;
+		
+		
+		// Now, triangulate the monotone polygons in linear time
+		Point[] triangles = new Point[(n-2)*3];
+		int t = 0;
+		for (Point p : monotones)
+		{
+			// Bring p to the top
+			while (!p.isAbove(p.prev)) p = p.prev;
+			while (!p.isAbove(p.next)) p = p.next;
+			Point u, v, w, q = p;
+			// Initialize the stack with the two topmost points
+			LinkedList<Point> s = new LinkedList<Point>();
+			s.push(p);
+			s.push(p.next.isAbove(q.prev) ? (p=p.next) : (q=q.prev));
+			// Continue untill there is one point left
+			while (p.next != q.prev)
+			{
+				// Pick the next highest point
+				u = p.next.isAbove(q.prev) ? (p=p.next) : (q=q.prev);
+				// Is this point in the same chain as the top of the stack?
+				boolean dfChs = u.next != s.peek() && u.prev != s.peek();
+				// Remove from the stack, in two different situations
+				v = dfChs ? s.removeLast() : s.pop();
+				// Continue there are no more triangles to make
+				while (!s.isEmpty() && (dfChs || isTriangle(p, u, v, s.peek())))
+				{
+					w = dfChs ? s.removeLast() : s.pop();
+					triangles[t++] = u;
+					triangles[t++] = u==p ? w : v;
+					triangles[t++] = u==p ? v : w;
+					v = w;
+				}
+				s.push(v);
+				s.push(u);
+			}
+			boolean sInP = s.peek() == p;
+			u = p.next;
+			v = s.pop();
+			while (!s.isEmpty())
+			{
+				w = s.pop();
+				triangles[t++] = u;
+				triangles[t++] = sInP ? w : v;
+				triangles[t++] = sInP ? v : w;
+				v = w;
+			}
+		}
+		return triangles;
 	}
 	
 	private static int getType(Point p)
@@ -261,7 +261,7 @@ public class Triangulation
 		return p.x < cx ? -1 : p.x > cx ? 1 : 0;
 	}
 	
-	public static class Point implements Comparable<Point>
+	public static class Point implements Comparable<Point>, tcr.meetkunde.Point
 	{
 		public double x, y;
 		public Point next, prev;
@@ -293,6 +293,14 @@ public class Triangulation
 			if (this.x > that.x) return  1;
 			return 0;
 		}
+		@Override public double getX() {return x;}
+		@Override public double getY() {return y;}
+		@Override public int igetX() {return (int)x;}
+		@Override public int igetY() {return (int)y;}
+//		@Override public void setX(int x) {this.x=x;}
+//		@Override public void setY(int y) {this.y=y;}
+//		@Override public void setX(double x) {this.x=x;}
+//		@Override public void setY(double y) {this.y=y;}
 	}
 
 	private static class Edge implements Comparable<Edge>
@@ -454,5 +462,13 @@ public class Triangulation
 		}
 
 	}
+	
+}
+
+
+class Triangulation2
+{
+	
+	
 	
 }
