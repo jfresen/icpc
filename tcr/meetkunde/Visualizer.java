@@ -16,6 +16,11 @@ import javax.swing.JPanel;
 public class Visualizer
 {
 
+	public static JFrame showPointsAndLines(Point[] points, Point[] lines, boolean contiguous)
+	{
+		return showWindow("Geometric figure", new PointsLinesPanel(points, lines, contiguous));
+	}
+	
 	public static JFrame showConvexHull(Point[] points, Point[] hull)
 	{
 		return showWindow("Convex Hull", new ConvexHullPanel(points, hull));
@@ -61,6 +66,62 @@ public class Visualizer
 		return frame;
 	}
 	
+	private static class PointsLinesPanel extends JPanel
+	{
+		private static final long serialVersionUID = 7731887702038354562L;
+		private Point[] points;
+		private Point[] lines;
+		private boolean contiguous;
+		private double scalex, scaley;
+		private int lx, ly, ux, uy;
+		private static final int BORDER = 10;
+		private static final int WIDTH = 400;
+		private static final int HEIGHT = 400;
+		
+		public PointsLinesPanel(Point[] p, Point[] l, boolean c)
+		{
+			points = p;
+			lines = l;
+			contiguous = c;
+			lx = Integer.MAX_VALUE; ly = Integer.MAX_VALUE;
+			ux = Integer.MIN_VALUE; uy = Integer.MIN_VALUE;
+			for (Point point : points)
+			{
+				if (lx > point.igetX()) lx = point.igetX();
+				if (ly > point.igetY()) ly = point.igetY();
+				if (ux < point.igetX()) ux = point.igetX();
+				if (uy < point.igetY()) uy = point.igetY();
+			}
+			if (ux-lx < 10) ux = lx+10;
+			if (uy-ly < 10) uy = ly+10;
+			scalex = (double)(WIDTH -2*BORDER)/(ux-lx);
+			scaley = (double)(HEIGHT-2*BORDER)/(uy-ly);;
+			setPreferredSize(new Dimension(WIDTH, HEIGHT));
+		}
+		@Override
+		protected void paintComponent(Graphics g1)
+		{
+			super.paintComponent(g1);
+			Graphics2D g = (Graphics2D)g1;
+			double scale = Math.min(scalex, scaley);
+			int n = lines.length;
+			for (int i = 0; i < lines.length; i += contiguous? 1 : 2)
+			{
+				int x1 = (int)((lines[i].igetX()-lx)*scale + BORDER);
+				int y1 = (int)((lines[i].igetY()-ly)*scale + BORDER);
+				int x2 = (int)((lines[(i+1)%n].igetX()-lx)*scale + BORDER);
+				int y2 = (int)((lines[(i+1)%n].igetY()-ly)*scale + BORDER);
+				g.drawLine(x1, y1, x2, y2);
+			}
+			for (Point p : points)
+			{
+				int x = (int)((p.igetX()-lx)*scale + BORDER);
+				int y = (int)((p.igetY()-ly)*scale + BORDER);
+				g.fillOval(x-2, y-2, 5, 5);
+			}
+		}
+	}
+
 	private static class ConvexHullPanel extends JPanel
 	{
 		private static final long serialVersionUID = 976226483047884696L;
