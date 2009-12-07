@@ -1616,3 +1616,45 @@ class ModularExponentiation
 		return x;
 	}
 }
+
+
+
+// Generates all primes smaller then N
+/*              x	         pi(x)	x/pi(x)
+ 1:            10	             4	 2.500
+ 2:           100	            25	 4.000
+ 3:          1000	           168	 5.952
+ 4:         10000	         1,229	 8.137
+ 5:        100000	         9,592	10.425
+ 6:       1000000	        78,498	12.740
+ 7:      10000000	       664,579	15.047
+ 8:     100000000	     5,761,455	17.357
+ 9:    1000000000	    50,847,534	19.667
+10:   10000000000	   455,052,511	21.975
+11:  100000000000	 4,118,054,813	24.283
+12: 1000000000000	37,607,912,018	26.590
+*/
+class PrimeGenerator
+{
+	static final int N = 1000000;
+	static int[] primes = new int[79000];
+	static int psize = 0, prime;
+	
+	public static void generatePrimes()
+	{
+		psize = 0;
+		primes[psize++] = 2;
+		for (prime = 3; prime < N; prime += 2)
+			if (possibilityIsPrime())
+				primes[psize++] = prime;
+	}
+	
+	private static boolean possibilityIsPrime()
+	{
+		int ubound = (int)Math.sqrt(prime);
+		for (int i = 1; i < psize && primes[i] <= ubound; i++)
+			if (prime % primes[i] == 0)
+				return false;
+		return true;
+	}
+}
