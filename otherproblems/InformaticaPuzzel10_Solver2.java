@@ -3,14 +3,14 @@ package otherproblems;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class InpakkenSolver2 implements InpakkenInterface
+public class InformaticaPuzzel10_Solver2 implements InformaticaPuzzel10_Interface
 {
 	
 	/**
 	 * Solves the problem by combining the read ints in all possible ways, where
 	 * each way is a hardcoded comparison of the right ints.
 	 * 
-	 * @see otherproblems.InpakkenInterface#solve(java.util.Scanner)
+	 * @see otherproblems.InformaticaPuzzel10_Interface#solve(java.util.Scanner)
 	 */
 	public ArrayList<Boolean> solve(Scanner in)
 	{

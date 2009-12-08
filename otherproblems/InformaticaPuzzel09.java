@@ -3,7 +3,7 @@ package otherproblems;
 import java.io.File;
 import java.util.Scanner;
 
-public class Prullen
+public class InformaticaPuzzel09
 {
 	
 	public static final int NUM_ATELIERS = 50;
@@ -12,7 +12,7 @@ public class Prullen
 	
 	public static void main(String[] args) throws Throwable
 	{
-		Scanner s = new Scanner(new File("otherproblems\\sampledata\\prullen.in"));
+		Scanner s = new Scanner(new File("otherproblems/sampledata/09-prullen.in"));
 		int[][] winst = new int[NUM_ATELIERS][NUM_DOZEN+1];
 		int[] aantal = new int[NUM_ATELIERS];
 		int[] prullen = new int[10];

@@ -6,19 +6,19 @@ import java.io.PrintWriter;
 import java.util.Random;
 import java.util.Scanner;
 
-public class Inpakken
+public class InformaticaPuzzel10
 {
 	
 	public static void main(String[] args) throws Throwable
 	{
 		// Create a handle to the inputdata:
 //		File random = generateRandomTests(100000);
-		File fixed1 = new File("otherproblems//sampledata//inpakken.in");
+		File fixed1 = new File("otherproblems/sampledata/10-inpakken.in");
 		File fixed2 = new File("C:\\DOCUME~1\\JELLEF~1\\LOCALS~1\\Temp\\inpakken15056.in");
 		Scanner in = new Scanner(fixed2);
 		
 		// Solve the problem:
-		InpakkenInterface solver = new InpakkenSolver1();
+		InformaticaPuzzel10_Interface solver = new InformaticaPuzzel10_Solver1();
 		long start = System.currentTimeMillis(), end = 0;
 		solver.solve(in);
 		end = System.currentTimeMillis();

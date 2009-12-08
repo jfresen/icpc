@@ -9,11 +9,11 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Scanner;
 
-public class Peer
+public class InformaticaPuzzel15
 {
 	public static void main(String[] args) throws Throwable
 	{
-		Scanner in = new Scanner(new File("otherproblems//sampledata//peer.in"));
+		Scanner in = new Scanner(new File("otherproblems/sampledata/15-peer.in"));
 		for (int tests = in.nextInt(); tests > 0; tests--)
 		{
 			// Buffer the input, so we can reuse it
@@ -179,38 +179,38 @@ public class Peer
 		end = System.currentTimeMillis();
 		System.out.println("Time (lines solution): " + (end-start) + " ms");
 	}
-}
-
-class Circle
-{
-	public int x,y,r,d;
-	public HashSet<Circle> t;
-	public Circle(Scanner in)
+	
+	private static class Circle
 	{
-		this(in.nextInt(), in.nextInt(), in.nextInt());
+		public int x,y,r,d;
+		public HashSet<Circle> t;
+		public Circle(Scanner in)
+		{
+			this(in.nextInt(), in.nextInt(), in.nextInt());
+		}
+		public Circle(int x, int y, int r)
+		{
+			this.x = x;
+			this.y = y;
+			this.r = r;
+			t = new HashSet<Circle>();
+			d = 0;
+		}
 	}
-	public Circle(int x, int y, int r)
+	
+	private static class SortCentres implements Comparator<Circle>
 	{
-		this.x = x;
-		this.y = y;
-		this.r = r;
-		t = new HashSet<Circle>();
-		d = 0;
+		public int compare(Circle c, Circle d)
+		{
+			return d.y - c.y; // Note: sorted descending
+		}
 	}
-}
-
-class SortCentres implements Comparator<Circle>
-{
-	public int compare(Circle c, Circle d)
+	
+	private static class SortTops implements Comparator<Circle>
 	{
-		return d.y - c.y; // Note: sorted descending
-	}
-}
-
-class SortTops implements Comparator<Circle>
-{
-	public int compare(Circle c, Circle d)
-	{
-		return (d.y+d.r) - (c.y+c.r); // Note: sorted descending
+		public int compare(Circle c, Circle d)
+		{
+			return (d.y+d.r) - (c.y+c.r); // Note: sorted descending
+		}
 	}
 }

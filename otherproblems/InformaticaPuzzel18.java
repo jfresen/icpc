@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Scanner;
 
-public class Delen
+public class InformaticaPuzzel18
 {
 	
 	public static boolean[] isPrime = {false, false, true, true};

@@ -3,7 +3,7 @@ package otherproblems;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public interface InpakkenInterface
+public interface InformaticaPuzzel10_Interface
 {
 	
 	/**

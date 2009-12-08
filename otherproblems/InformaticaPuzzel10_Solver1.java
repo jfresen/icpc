@@ -3,7 +3,7 @@ package otherproblems;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class InpakkenSolver1 implements InpakkenInterface
+public class InformaticaPuzzel10_Solver1 implements InformaticaPuzzel10_Interface
 {
 	
 	/**
@@ -25,7 +25,7 @@ public class InpakkenSolver1 implements InpakkenInterface
 	 * into one statement (see {@link Box#canContain(Box, int)} and
 	 * {@link #fitBoxes(Box, int, Box[])}).
 	 * 
-	 * @see otherproblems.InpakkenInterface#solve(java.util.Scanner)
+	 * @see otherproblems.InformaticaPuzzel10_Interface#solve(java.util.Scanner)
 	 */
 	public ArrayList<Boolean> solve(Scanner in)
 	{

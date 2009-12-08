@@ -1,3 +1,5 @@
+package otherproblems;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -5,7 +7,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Scanner;
 
-public class PeerClean
+public class InformaticaPuzzel15_Clean
 {
 	
 	//////////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -77,33 +79,33 @@ public class PeerClean
 		System.out.println(maxTints);
 	}
 	
-}
-
-class Circle
-{
-	public int x,y,r;
-	public Circle(Scanner in)
+	private static class Circle
 	{
-		this.x = in.nextInt();
-		this.y = in.nextInt();
-		this.r = in.nextInt();
+		public int x,y,r;
+		public Circle(Scanner in)
+		{
+			this.x = in.nextInt();
+			this.y = in.nextInt();
+			this.r = in.nextInt();
+		}
 	}
-}
-
-class SortCentres implements Comparator<Circle>
-{
-	@Override
-	public int compare(Circle c, Circle d)
+	
+	private static class SortCentres implements Comparator<Circle>
 	{
-		return d.y - c.y; // Note: sorted descending
+		@Override
+		public int compare(Circle c, Circle d)
+		{
+			return d.y - c.y; // Note: sorted descending
+		}
 	}
-}
-
-class SortTops implements Comparator<Circle>
-{
-	@Override
-	public int compare(Circle c, Circle d)
+	
+	private static class SortTops implements Comparator<Circle>
 	{
-		return (d.y+d.r) - (c.y+c.r); // Note: sorted descending
+		@Override
+		public int compare(Circle c, Circle d)
+		{
+			return (d.y+d.r) - (c.y+c.r); // Note: sorted descending
+		}
 	}
+	
 }
