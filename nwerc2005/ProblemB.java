@@ -1,4 +1,4 @@
-package ekp2005;
+package nwerc2005;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

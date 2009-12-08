@@ -1,4 +1,4 @@
-package ekp2004;
+package nwerc2004;
 
 /* Sample solution to D - Pseudo random numbers / Mikael Goldmann
  * First count backwards to recreate the seed number 

@@ -1,6 +1,6 @@
 //Construct bipartite graph and find the size of each component. Then, solve the
 //maximum subset sum problem with dynamic programming.
-package ekp2003;
+package nwerc2003;
 
 import java.io.File;
 import java.util.ArrayList;

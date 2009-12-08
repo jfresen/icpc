@@ -1,4 +1,4 @@
-package ekp2005;
+package nwerc2005;
 
 public class ProblemA
 {

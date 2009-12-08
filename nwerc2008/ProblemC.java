@@ -1,4 +1,4 @@
-package ekp2008;
+package nwerc2008;
 
 import java.io.File;
 import java.util.Arrays;

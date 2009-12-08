@@ -1,4 +1,4 @@
-package ekp2002;
+package nwerc2002;
 
 import java.io.File;
 import java.util.Locale;

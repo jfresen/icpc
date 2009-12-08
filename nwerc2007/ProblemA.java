@@ -1,4 +1,4 @@
-package ekp2007;
+package nwerc2007;
 
 import java.io.File;
 import java.util.Arrays;

@@ -1,4 +1,4 @@
-package ekp2004;
+package nwerc2004;
 
 /* Sample solution to Watchdog
  * Author: Mikael Goldmann

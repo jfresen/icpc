@@ -1,7 +1,7 @@
 /*
  * Created on 24-jan-2006
  */ 
-package ekp1997;
+package nwerc1997;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

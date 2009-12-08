@@ -1,4 +1,4 @@
-package ekp2004;
+package nwerc2004;
 
 /*
  * Seti
