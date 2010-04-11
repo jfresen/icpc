@@ -211,7 +211,7 @@ class FloydWarshall
 // Implementation of Kruskal (minimal spanning tree). Input file specifies
 // number of nodes, number of edges and all connections (triples of three ints
 // from, to and length). Node numbers start from 0.
-// Also useful for an astonishingly simple implementation of a disjoint-set.
+// Also features an astonishingly simple implementation of a disjoint-set.
 class Kruskal
 {
 	private static int[] parent;
