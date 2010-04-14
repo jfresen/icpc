@@ -1,0 +1,24 @@
+3
+5 5 5
+10 5 5
+5 1 1
+1 3
+2 3
+
+5
+10 5 10
+20 10 5
+10 10 5
+5 5 5
+20 0 10
+1 2
+1 3
+1 4
+3 5
+
+0
+
+Oplossing: Minimum is in elk geval de som van lose en stay.
+Dan moet je ook ten minste de grootste aanvalsmacht meebrengen.
+Dan kan het ook nog zo zijn dat je op weg tussen twee kastelen x manschappen
+verliest, waardoor je bij kasteel 2 met te weinig mensen aankomt.
