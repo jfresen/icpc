@@ -1,0 +1,24 @@
+Case 1:
+C.CCC.CCC
+C.C.C.C.C
+CCC.CCC.C
+
+Case 2:
+CCCC
+...C
+CCCC
+C...
+CCCC
+
+Case 3:
+C#.
+CCC
+.#C
+
+Case 4:
+CCCCCCC
+......C
+CCCCCCC
+C...#..
+CCC.CCC
+.#CCC.C
