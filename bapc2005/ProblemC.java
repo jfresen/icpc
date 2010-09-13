@@ -1,24 +1,35 @@
 package bapc2005;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.util.Arrays;
+import java.util.Scanner;
 
 public class ProblemC
 {
 	
 	// See problemdescription.
-	private static int m, s, w;
-	private static int nf, nw;
+	private static int m, s, w; // move 1 floor, shut doors, walk 1 floor
+	private static int nf, nw;  // num floors, num floors with waiting people
 	// Geeft aan op welke verdiepingen mensen zijn, in het begin.
-	private static int[] people;
+	private static int[] f;
 	private static double m1, w1;
 	
 	public static void main(String[] args) throws Exception
 	{
-		BufferedReader in = new BufferedReader(new FileReader("bapc2005\\sampledata\\c.in"));
-		for (int t = 0, T = new Integer(in.readLine()); t < T; t++)
-			solve(in);
+		Scanner in = new Scanner(new File("bapc2005/sampledata/c.in"));
+		int cases = in.nextInt();
+		while (cases-- > 0)
+		{
+			m = in.nextInt(); s = in.nextInt(); w = in.nextInt();
+			nf = in.nextInt(); nw = in.nextInt();
+			f = new int[nw+2];
+			f[nw-2] = nf;
+			f[nw-1] = 0;
+			for (int i = 0; i < nw; i++)
+				f[i] = in.nextInt();
+		}
 	}
 	
 	private static void solve(BufferedReader in) throws Exception
