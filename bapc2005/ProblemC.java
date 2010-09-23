@@ -29,6 +29,7 @@ public class ProblemC
 			f[nw-1] = 0;
 			for (int i = 0; i < nw; i++)
 				f[i] = in.nextInt();
+			Arrays.sort(f);
 		}
 	}
 	
