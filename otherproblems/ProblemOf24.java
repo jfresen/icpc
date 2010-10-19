@@ -8,11 +8,20 @@ public class ProblemOf24
 	public static void main(String[] args)
 	{
 		int[] number = {1, 3, 4, 6};
-		int c = number[0];
-		number = remove(number, 0);
-		if (solve(number, c) && store(""+c))
-			System.out.println("Problem solved, solution is: "+ans);
-		else
+		boolean solved = false;
+		
+		for (int i = 0; !solved && i < number.length; i++)
+		{
+			int c = number[i];
+			int[] remaining = remove(number, i);
+			ans = "(#)";
+			if (solve(remaining, c))
+			{
+				solved = store(""+c);
+				System.out.println("Problem solved, solution is: "+ans);
+			}
+		}
+		if (!solved)
 			System.out.println("Problem could not be solved");
 	}
 
