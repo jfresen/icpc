@@ -1,8 +1,6 @@
 package bapc2005;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -13,93 +11,100 @@ public class ProblemC
 	private static int m, s, w; // move 1 floor, shut doors, walk 1 floor
 	private static int nf, nw;  // num floors, num floors with waiting people
 	// Geeft aan op welke verdiepingen mensen zijn, in het begin.
-	private static int[] f;
-	private static double m1, w1;
+	private static int[] f, t;
 	
 	public static void main(String[] args) throws Exception
 	{
-		Scanner in = new Scanner(new File("bapc2005/sampledata/c.in"));
-		int cases = in.nextInt();
+		Scanner in = new Scanner(new File("bapc2005/testdata/c.in"));
+		int cases = in.nextInt(), a;
 		while (cases-- > 0)
 		{
+			// Read input, and add two extra destination floors: 0 and Nf
+			// m = elevator speed; s = door closing time; w = walk speed
 			m = in.nextInt(); s = in.nextInt(); w = in.nextInt();
-			nf = in.nextInt(); nw = in.nextInt();
-			f = new int[nw+2];
-			f[nw-2] = nf;
-			f[nw-1] = 0;
-			for (int i = 0; i < nw; i++)
+			nf = in.nextInt(); nw = in.nextInt()+2;
+			f = new int[nw];
+			f[0] = nf;
+			f[1] = 0;
+			for (int i = 2; i < nw; i++)
 				f[i] = in.nextInt();
 			Arrays.sort(f);
+			for (int i=0, j=f.length-1; i < j; i++, j--)
+				{f[i]^=f[j]; f[j]^=f[i]; f[i]^=f[j];}
+			
+			// Initialize the cache (t[i] = earliest time at which the elevator
+			// can be at floor f[i] while all floors above f[i] are empty
+			t = new int[nw];
+			Arrays.fill(t, Integer.MAX_VALUE);
+			t[0] = 0;
+			
+			// Calculate the earliest time to get to a floor, with all people
+			// from that floor and above in the elevator. Mind that to points to
+			// a destination index, not a floor number, the floor number is
+			// f[to]. Thus, to=1 points to the upper destination, i.e. the
+			// floor with people that the elevator will pass first. The floors
+			// between f[i] and f[i+1] don't have to be considered, because it
+			// doesn't make any difference.
+			for (int to = 1; to < nw; to++)
+			{
+				// p = floor where people are picked up
+				int p = f[to];
+				for (int fr = to; fr > 0; fr--)
+				{
+					while (calctime(t[fr-1],f[fr-1],f[fr],p+1,f[to]) <
+					    (a=calctime(t[fr-1],f[fr-1],f[fr],p  ,f[to])))
+						p++;
+					if (t[to] > a)
+						t[to] = a;
+				}
+			}
+			
+//			System.out.println(Arrays.toString(f));
+//			System.out.println(Arrays.toString(t));
+			
+			// Now find out from where people will use the stairs instead of the
+			// elevator to get down.
+			int ans = Math.min(f[1]*w, t[--nw]); // all walk or all elevator
+			for (int i = 1; i < nw; i++)
+				ans = Math.min(ans, Math.max(t[i]+f[i]*m, f[i+1]*w));
+			System.out.println(ans);
 		}
 	}
 	
-	private static void solve(BufferedReader in) throws Exception
+	/**
+	 *     |
+	 * f0 -|\
+	 *     | \
+	 * f1 -|\ \
+	 *     | \ \
+	 * fp -|  --[]
+	 *     | /    \
+	 * f2 -|/      \
+	 *     |
+	 * 
+	 * The elevator starts in f0, at time stamp t0. It will move down until
+	 * floor fp, where all the people that started between floor f1 and f2,
+	 * inclusive, will be picked up. Then, the elevator goes further down until
+	 * it is on the level of f2.
+	 * 
+	 * <p>Note that the following relation must hold:
+	 * <code>f0 <= f1 <= fp <= f2</code>
+	 *     
+	 * @param t0 The time at which the elevator is at f0
+	 * @param f0 The floor where the elevator comes from
+	 * @param f1 The floor from where people will walk down to fp
+	 * @param fp The floor where the people will be picked up
+	 * @param f2 The floor from where people will walk up to fp
+	 * @return The time at which the elevator is at floor f2, carrying all
+	 *         people from floors f1 to f2, inclusive
+	 */
+	private static int calctime(int t0, int f0, int f1, int fp, int f2)
 	{
-		read(in);
-		if (nw == 0)
-			System.out.println(0);
-		else if (w <= m || m*nf+s >= w*people[nw-1])
-			System.out.println(people[nw-1] * w);
-		else
-			solveGreedy();
-	}
-	
-	private static int solve(int l, int u, int t)
-	{
-		// Lift is down.
-		if (l == 0)
-			return u == -1 ? 0 : people[u]*w;
-//			return u == -1 ? t : Math.max(t, people[u]*w);
-//		// All people evacuated, lift not yet down.
-//		if (u == -1)
-//			return t + l*m;
-		int dt = Math.abs(l - people[u]) * w;
-		// auto blablabla
-		return -1;
-	}
-	
-	private static void solveGreedy()
-	{
-		int t = 0;
-		int lf = nf;
-		int pointer = nw - 1;
-		boolean liftInUse = false;
-		int df, lowerbound;
-		double a;
-		while (pointer >= 0 && m*lf + s < w*people[pointer])
-		{
-			liftInUse = true;
-			a = lf - m1*t;
-			df = lf - (int)Math.ceil(m1 * (people[pointer]-a) / (m1-w1) + a);
-			t += m * df + s;
-			lf -= df;
-			lowerbound = 2*lf - people[pointer];
-			pointer = Arrays.binarySearch(people, lowerbound);
-			if (pointer < 0)
-				pointer = ~pointer;
-			pointer--;
-		}
-		t = Math.max(pointer < 0 ? 0 : w*people[pointer], liftInUse ? t+m*lf : 0);
-		System.out.println(t);
-	}
-	
-	private static void read(BufferedReader in) throws Exception
-	{
-		// Read input.
-		String[] input = in.readLine().split(" ");
-		m = new Integer(input[0]);
-		s = new Integer(input[1]);
-		w = new Integer(input[2]);
-		input = in.readLine().split(" ");
-		nf = new Integer(input[0]);
-		nw = new Integer(input[1]);
-		people = new int[nw];
-		for (int i = 0; i < nw; i++)
-			people[i] = new Integer(in.readLine());
-		// Preprocess input.
-		Arrays.sort(people);
-		m1 = -1d/m;
-		w1 = -1d/w;
+		int pickuptime = 0;
+		pickuptime = Math.max(pickuptime, (f1-fp) * w);
+		pickuptime = Math.max(pickuptime, (fp-f2) * w);
+		pickuptime = Math.max(pickuptime, t0 + (f0-fp) * m);
+		return pickuptime + s + (fp-f2)*m;
 	}
 	
 }
