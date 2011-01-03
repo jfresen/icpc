@@ -33,29 +33,6 @@ public class ProblemF
 		System.out.printf("Took %.2f seconds%n", (end - start)/1000.0);
 	}
 	
-	private static void printJumpTable()
-	{
-		int n = 70;
-		System.out.print(" ");
-		for (int i = n; i >= 0; i--)
-			if (Arrays.binarySearch(primes, i) >= 0)
-				System.out.print("  x");
-			else
-				System.out.print("   ");
-		System.out.println(" ");
-		System.out.print("[");
-		for (int i = n; i >= 0; i--)
-			System.out.printf("%3d", i);
-		System.out.println("]");
-		System.out.print("[");
-		for (int i = n; i >= 0; i--)
-			if (jmp[i] == jmp.length)
-				System.out.printf("  -");
-			else
-				System.out.printf("%3d", jmp[i]);
-		System.out.println("]");
-	}
-	
 	private static void makeJumpTable()
 	{
 		jmp = new int[primes[primes.length-1]+1];
