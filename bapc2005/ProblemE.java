@@ -8,41 +8,16 @@ import java.util.Scanner;
 public class ProblemE
 {
 	
-	// Na•ve solution:
-//	public static void main(String[] args) throws Throwable
-//	{
-//		Scanner in = new Scanner(new File("bapc2005/testdata/e.in"));
-//		int cases = in.nextInt();
-//		while (cases-- > 0)
-//		{
-//			int n = in.nextInt();
-//			int[] x = new int[n];
-//			int[] y = new int[n];
-//			for (int i = 0; i < n; i++)
-//			{
-//				x[i] = in.nextInt();
-//				y[i] = in.nextInt();
-//			}
-//			long num = 0;
-//			for (int i = 0; i < n; i++)
-//				for (int j = i+1; j < n; j++)
-//					if (x[i] <= x[j] && y[i] >= y[j] ||
-//					    x[j] <= x[i] && y[j] >= y[i])
-//						num++;
-//			System.out.println(num);
-//		}
-//	}
-	
-	public static final XSort SORT_ON_X = new XSort();
-	public static final YSort SORT_ON_Y = new YSort();
+	private static final Comparator<Tuple> SORT_ON_X = new XSort();
+	private static final Comparator<Tuple> SORT_ON_Y = new YSort();
 	
 ////////////////////////////////////////////////////////////////////////////////
-/// THE FOLLOWING PIECE OF CODE IS THE SLOWEST IMPLEMENTATION, BUT ONLY      ///
-/// MARGINALLY. IT DIVIDES THE BLOB OF ISLANDS INTO TWO EQUAL HALFS, WHERE   ///
-/// ISLANDS ON THE BORDER ARE DIVIDED BETWEEN THE LEFT AND RIGHT HALF IN     ///
-/// SUCH A WAY THAT THE HALFS ARE EQUALLY SIZED. THIS RESULTS IN A PERFECTLY ///
-/// EXPONENTIALLY DECREASING N AND THE MOST ELEGANT CODE. IT RUNS IN         ///
-/// APPROXIMATELY 10.5 SECONDS.                                              ///
+/// THE FOLLOWING PIECE OF CODE IS THE MOST ELEGANT IMPLEMENTATION, BUT ALSO ///
+/// MARGINALLY THE SLOWEST. IT DIVIDES THE BLOB OF ISLANDS INTO TWO EQUAL    ///
+/// HALFS, WHERE ISLANDS ON THE BORDER ARE DIVIDED BETWEEN THE LEFT AND      ///
+/// RIGHT HALF IN SUCH A WAY THAT THE HALFS ARE EQUALLY SIZED. THIS RESULTS  ///
+/// IN A PERFECTLY EXPONENTIALLY DECREASING N AND THE MOST ELEGANT CODE. IT  ///
+/// RUNS IN APPROXIMATELY 10.5 SECONDS.                                      ///
 ////////////////////////////////////////////////////////////////////////////////
 
 	public static void main(String[] args) throws Throwable
@@ -70,28 +45,13 @@ public class ProblemE
 		// base case is when there are only 0 or 1 tuples in the list
 		if (n < 2)
 			return 0;
-		// create storage for each quarter (upper-left to lower-right)
-		Tuple[] left = new Tuple[(n+1)/2]; int lSize = 0;
-		Tuple[] right = new Tuple[n/2]; int rSize = 0;
-		Tuple[] middle = new Tuple[n]; int mSize = 0;
-		// find the medians in terms of x and y
+		// create storage for each half
+		Tuple[] left = new Tuple[(n+1)/2];
+		Tuple[] right = new Tuple[n/2];
+		// divide the islands in a left and a right part
 		Arrays.sort(islands, SORT_ON_X);
-		double x2 = (islands[(n-1)/2].x + islands[n/2].x) / 2.0;
-		// place all tuples in one of the halfs
-		for (int i = 0; i < n; i++)
-		{
-			if (islands[i].x < x2)
-				left[lSize++] = islands[i];
-			else if (islands[i].x > x2)
-				right[rSize++] = islands[i];
-			else
-				middle[mSize++] = islands[i];
-		}
-		// distribute the middle islands
-		int toLeft = left.length - lSize;
-		int toRight = mSize - toLeft;
-		System.arraycopy(middle, 0, left, lSize, toLeft);
-		System.arraycopy(middle, toLeft, right, rSize, toRight);
+		System.arraycopy(islands, 0, left, 0, left.length);
+		System.arraycopy(islands, left.length, right, 0, right.length);
 		// calculate the interconnected pairs between left and right
 		long leftRight = 0;
 		Arrays.sort(left, SORT_ON_Y);
@@ -107,7 +67,7 @@ public class ProblemE
 			calculateNumberOfPairs(left) +
 			calculateNumberOfPairs(right);
 	}
-
+	
 ////////////////////////////////////////////////////////////////////////////////
 /// THE FOLLOWING PIECE OF CODE IS MARGINALLY SLOWER THEN THE LAST           ///
 /// IMPLEMENTATION, BUT IS SLIGHTLY MORE ELEGANT. IT USES THE SAME TECHNIQUE ///
@@ -330,8 +290,10 @@ public class ProblemE
 	}
 	
 	private static class XSort implements Comparator<Tuple>
-	{@Override public int compare(Tuple a, Tuple b) {return a.x - b.x;}}
+	{@Override public int compare(Tuple a, Tuple b)
+	{if (a.x == b.x) return b.y - a.y; return a.x - b.x;}}
 	
 	private static class YSort implements Comparator<Tuple>
-	{@Override public int compare(Tuple a, Tuple b) {return a.y - b.y;}}
+	{@Override public int compare(Tuple a, Tuple b)
+	{if (a.y == b.y) return a.x - b.x; return a.y - b.y;}}
 }

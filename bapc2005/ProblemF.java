@@ -1,32 +1,82 @@
 package bapc2005;
 
+import java.io.File;
+import java.util.Arrays;
+import java.util.Scanner;
+
 public class ProblemF
 {
 	
-	static int[] primes = new int[80000];
+	static int[] primes = new int[80000]; // tight bound: 79500
 	static int psize;
 	static int possiblePrime;
 	
-	static int[] tolls;
+	static int[] jmp;
 	
-	public static void main(String[] args)
+	public static void main(String[] args) throws Throwable
 	{
 		long start = System.currentTimeMillis();
-		calculatePrimes();
-		calculateTolls();
+		makePrimeTable();
+		makeJumpTable();
+		Scanner in = new Scanner(new File("bapc2005/testdata/f.in"));
+		int cases = in.nextInt();
+		while (cases-- > 0)
+		{
+			int s = in.nextInt();
+			for (int b = in.nextInt(); b > 0; b--)
+				for (int t = jmp[s]; s < t; s++)
+					if (t > jmp[s])
+						t = jmp[s];
+			System.out.println(s);
+		}
 		long end = System.currentTimeMillis();
-		System.out.printf("Took %.2f seconds", (end - start)/1000.0);
+		System.out.printf("Took %.2f seconds%n", (end - start)/1000.0);
 	}
 	
-	private static void calculateTolls()
+	private static void printJumpTable()
 	{
-		tolls = new int[primes[primes.length-1]];
+		int n = 70;
+		System.out.print(" ");
+		for (int i = n; i >= 0; i--)
+			if (Arrays.binarySearch(primes, i) >= 0)
+				System.out.print("  x");
+			else
+				System.out.print("   ");
+		System.out.println(" ");
+		System.out.print("[");
+		for (int i = n; i >= 0; i--)
+			System.out.printf("%3d", i);
+		System.out.println("]");
+		System.out.print("[");
+		for (int i = n; i >= 0; i--)
+			if (jmp[i] == jmp.length)
+				System.out.printf("  -");
+			else
+				System.out.printf("%3d", jmp[i]);
+		System.out.println("]");
 	}
 	
-	private static void calculatePrimes()
+	private static void makeJumpTable()
+	{
+		jmp = new int[primes[primes.length-1]+1];
+		Arrays.fill(jmp, jmp.length);
+		for (int i = 0; i < 3; i++) jmp[i] = i;
+		jmp[3] = 4;
+		for (int i = 5; i < jmp.length; i++)
+		{
+			int j = Arrays.binarySearch(primes, i);
+			if (j<0) for (j=1; i%primes[j] != 0; j++);
+			int to = i - i/primes[j];
+			if (jmp[to] == jmp.length) jmp[to] = i;
+		}
+	}
+	
+	private static void makePrimeTable()
 	{
 		primes[psize++] = 2;
-		for (possiblePrime = 3; psize < primes.length; possiblePrime += 2)
+		primes[psize++] = 3;
+		primes[psize++] = 4; // useful for the creation of the jumptable
+		for (possiblePrime = 5; psize < primes.length; possiblePrime += 2)
 			if (possibilityIsPrime())
 				primes[psize++] = possiblePrime;
 	}
