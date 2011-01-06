@@ -496,7 +496,7 @@ class Maze
 
 
 // Solves the following problem: given two words, S and T, is S a substring of
-// T? Na•ve solutions use an O(n*m) algorithm, while this is only O(n+m).
+// T? Naï¿½ve solutions use an O(n*m) algorithm, while this is only O(n+m).
 // First, S is preprocessed so we know where to jump to when we encounter a
 // different character during the search through T, then we search linearly
 // through T.
@@ -560,11 +560,11 @@ class ProblemG_dkp2006
 // (A-lovers) as the first set of nodes and the other agents (B-lovers) as the
 // other set of nodes. An A-lover and a B-lover are connected if their votes are
 // incompatible. Then, the solution is the number of vertices that are not in
-// the minimum vertex cover. Now, find a maximal matching and use Kšnigs Theorem
+// the minimum vertex cover. Now, find a maximal matching and use Kï¿½nigs Theorem
 // to get the answer.
 // Note: in the implementation below, group A are cats and group B are dogs.
 //
-// Kšnigs theorem reads as follows:
+// Kï¿½nigs theorem reads as follows:
 // In any bipartite graph, the number of edges in a maximum matching is equal to
 // the number of vertices in a minimum vertex cover.
 //
@@ -1310,6 +1310,8 @@ class DelaunayTriangulation
 	
 	private static class Triangle implements tcr.meetkunde.Triangle
 	{
+		@Override public tcr.meetkunde.Point get(int i) {return p[i];}
+		
 		Point[] p = new Point[3];
 		Triangle[] t = new Triangle[3];
 		Triangle prev = null;
@@ -1366,7 +1368,6 @@ class DelaunayTriangulation
 				if (that.t[tj]  != null) q.add((that.t[tj].prev = that).t[tj]);
 			}
 		}
-		@Override public tcr.meetkunde.Point get(int i) {return p[i];}
 	}
 	
 	private static class Point implements Comparable<Point>, tcr.meetkunde.Point
