@@ -10,12 +10,14 @@ public class ConvexHull3D
 {
 	
 	public static final double EPSILON = 0.00001;
+	
+	// Is a point BEFORE, ON or AFTER a plane defined by three other points?
 	public static final int BEFORE =  1;
 	public static final int ON     =  0;
 	public static final int AFTER  = -1;
 	
-	private static List<Point> P;
-	private static List<Face> F;
+	private static List<Point> P; // List of points in the inputset
+	private static List<Face> F;  // List of faces of the hull
 	
 	public static void main(String[] args) throws Throwable
 	{
@@ -28,15 +30,41 @@ public class ConvexHull3D
 			F = new ArrayList<Face>();
 			if (!readProblem(in))
 				continue;
-			initializeConvexHull();
-			Collections.shuffle(P); // randomize to get O(nlogn) expected order
-			initializeConflictGraph();
-			for (Point p : P)
-				if (p.cnfl.size() > 0)
-				{
-					List<HalfEdge> horizon = new ArrayList<HalfEdge>();
-				}
+			makeConvexHull();
 		}
+	}
+	
+	// Make a convex hull, according to the algorithm on page 249 of
+	// Computational Geometry, De Berg et al., 3rd edition.
+	private static void makeConvexHull()
+	{
+		initializeConvexHull();    // Lines 1 and 2
+		Collections.shuffle(P);    // Line 3
+		initializeConflictGraph(); // Line 4
+		for (Point p : P)          // Lines 5 and 6
+			if (p.cnfl.size() > 0) // Line 7
+			{
+				// First: delete faces in p.confl from F
+				// TODO shouldn't I store both F and P as a hashset?
+				
+				List<HalfEdge> horizon = new ArrayList<HalfEdge>();
+				
+				// (* FINDING THE HORIZON EDGES     *)
+				// (* Note that this algorithm does *)
+				// (* not deliver a sorted horizon  *)
+				// horizon := empty list
+				// border := empty set
+				// for each face f:
+				//     remove f from the border
+				//     mark f
+				//     for all faces g adjacent to f:
+				//         if g is not marked:
+				//             put g in the border
+				// for each face f in the border:
+				//     for each halfedge e around f:
+				//         if the face adjacent to e is marked:
+				//             add e's twin to the horizon
+			}
 	}
 	
 	private static boolean readProblem(Scanner in)
@@ -70,10 +98,11 @@ public class ConvexHull3D
 		return true;
 	}
 	
+	// Make a hull with 4 points that form a tetrahedron.
 	private static void initializeConvexHull()
 	{
-		Point p1 = P.remove(P.size()-1);
-		Point p2 = P.remove(P.size()-1);
+		Point p1 = P.remove(P.size()-1);  // Any two points are
+		Point p2 = P.remove(P.size()-1);  // good to start with
 		Point p3 = getNonCollinearPoint(p1, p2);
 		Point p4 = getNonPlanarPoint(p1, p2, p3);
 		Face f1, f2, f3, f4;
@@ -103,6 +132,7 @@ public class ConvexHull3D
 		F.add(f4);
 	}
 	
+	// Put Point's and Face's in each others conflictlists.
 	private static void initializeConflictGraph()
 	{
 		for (int i = 0; i < P.size(); i++)
@@ -116,6 +146,7 @@ public class ConvexHull3D
 				}
 	}
 	
+	// Get and remove a point from P that is not on the same line as p1 & p2
 	private static Point getNonCollinearPoint(Point p1, Point p2)
 	{
 		for (int i = P.size()-1; i >= 0; i--)
@@ -124,6 +155,7 @@ public class ConvexHull3D
 		return null;
 	}
 	
+	// Get and remove a point from P that is not on the same line as p1 & p2
 	private static Point getNonPlanarPoint(Point p1, Point p2, Point p3)
 	{
 		for (int i = P.size()-1; i >= 0; i--)
@@ -136,25 +168,13 @@ public class ConvexHull3D
 	{
 		return Math.sqrt(area2(a, b, c));
 	}
+	
 	public static double area2(Point a, Point b, Point c)
 	{
 		Point v1 = b.subtract(a);
 		Point v2 = c.subtract(a);
 		Point cp = v1.crossProduct(v2);
 		return cp.length2();
-		
-//		double x1 = b.x - a.x; //
-//		double y1 = b.y - a.y; // Vector 1, b-a
-//		double z1 = b.z - a.z; //
-//		double x2 = c.x - a.x; //
-//		double y2 = c.y - a.y; // Vector 2, c-a
-//		double z2 = c.z - a.z; //
-//		
-//		double x3 = y1*z2 - y2*z1; //
-//		double y3 = x2*z1 - x1*z2; // Vector 3 = cross product of V1 x V2
-//		double z3 = x1*y2 - x2*y1; //
-//		
-//		return x3*x3 + y3*y3 + z3*z3; // The squared length of V3
 	}
 	
 	private static boolean isCollinear(Point a, Point b, Point c)
@@ -177,6 +197,11 @@ public class ConvexHull3D
 		return 0;
 	}
 	
+	// A Point is made up of 3 ints, is sortable by its id (order is fixed
+	// after the random permutation on line 24 (Line 7 in De Berg et al.),
+	// and implements a node from a bipartite graph. The nodes of this graph
+	// to which the Point is connected are the Face's in the conflictlist cnfl.
+	// Note that the nodes of the graph are stored in P & F.
 	private static class Point implements Comparable<Point>
 	{
 		public int id;
@@ -223,6 +248,13 @@ public class ConvexHull3D
 		{return (double)x*x + (double)y*y + (double)z*z;}
 	}
 	
+	// A HalfEdge is a geometrical edge (not an edge from a graph) between two
+	// faces. An edge is conceptually 'split' in half and each of the two faces
+	// uses one of the two halfs to define its boundary. A HalfEdge points to
+	// the next HalfEdge of this boundary (nxt) and the previous HalfEdge (prv).
+	// The next HalfEdge is always in ccw order. The two Points between which
+	// the edge lies are s and nxt.s. The other part of the edge, (which
+	// belongs to the boundary of the adjacent face) is called its twin (twn).
 	private static class HalfEdge
 	{
 		public Point s;
@@ -233,6 +265,11 @@ public class ConvexHull3D
 		public Point to() {return nxt.s;}
 	}
 	
+	// A Face is a part of the convex hull. It is defined by the first HalfEdge
+	// of its boundary (edge), which is essentially a linked list of HalfEdge's.
+	// Furthermore it implements a node from a bipartite graph. The nodes of
+	// this graph to which the Face is connected are the Point's in the
+	// conflictlist cnfl. Note that the nodes of the graph are stored in F & P.
 	private static class Face implements Comparable<Face>
 	{
 		private static int nextId = 0;
