@@ -3,8 +3,10 @@ package bapc2005;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 public class ConvexHull3D
 {
@@ -16,18 +18,51 @@ public class ConvexHull3D
 	public static final int ON     =  0;
 	public static final int AFTER  = -1;
 	
-	private static List<Point> P; // List of points in the inputset
-	private static List<Face> F;  // List of faces of the hull
+//	private static List<Point> P; // List of points in the inputset
+//	private static List<Face> F;  // List of faces of the hull
+	private static List<Point> P;
+	private static Set<Face> F;
 	
 	public static void main(String[] args) throws Throwable
 	{
+		Point p1 = new Point(0, 0, 0);
+		Point p2 = new Point(1, 0, 0);
+		Point p3 = new Point(2, 0, 0);
+		Point p4 = new Point(1, 1, 0);
+		Point p5 = new Point(1, 0, 1);
+		
+		// Initial CH:
+		Face f1 = new Face(p2, p4, p1);
+		Face f2 = new Face(p5, p2, p1);
+		Face f3 = new Face(p4, p5, p1);
+		Face f4 = new Face(p2, p5, p4);
+		f1.attach(f2); f2.attach(f3);
+		f1.attach(f3); f2.attach(f4);
+		f1.attach(f4); f3.attach(f4);
+		
+		// Add point p3:
+//		Face f5 = new Face(p2, p5, p3);
+//		Face f6 = new Face(p5, p4, p3);
+//		Face f7 = new Face(p4, p2, p3);
+//		f5.attach(f2); f6.attach(f3);
+//		f5.attach(f6); f6.attach(f7);
+//		f5.attach(f7); f7.attach(f1);
+		List<HalfEdge> horizon = new ArrayList<HalfEdge>();
+		horizon.add(f4.edge);
+		horizon.add(f4.edge.nxt);
+		horizon.add(f4.edge.nxt.nxt);
+		makeNewFaces(p3, horizon);
+		
+		if (true) return;
 		Scanner in = new Scanner(new File("bapc2005/sampledata/d.in"));
 		int cases = in.nextInt();
 		while (cases-- > 0)
 		{
 			System.out.println("\nCase " + cases);
+//			P = new ArrayList<Point>();
+//			F = new ArrayList<Face>();
 			P = new ArrayList<Point>();
-			F = new ArrayList<Face>();
+			F = new HashSet<Face>();
 			if (!readProblem(in))
 				continue;
 			makeConvexHull();
@@ -44,26 +79,10 @@ public class ConvexHull3D
 		for (Point p : P)          // Lines 5 and 6
 			if (p.cnfl.size() > 0) // Line 7
 			{
-				// First: delete faces in p.confl from F
-				// TODO shouldn't I store both F and P as a hashset?
-				
-				List<HalfEdge> horizon = new ArrayList<HalfEdge>();
-				
-				// (* FINDING THE HORIZON EDGES     *)
-				// (* Note that this algorithm does *)
-				// (* not deliver a sorted horizon  *)
-				// horizon := empty list
-				// border := empty set
-				// for each face f:
-				//     remove f from the border
-				//     mark f
-				//     for all faces g adjacent to f:
-				//         if g is not marked:
-				//             put g in the border
-				// for each face f in the border:
-				//     for each halfedge e around f:
-				//         if the face adjacent to e is marked:
-				//             add e's twin to the horizon
+				for (Face f : p.cnfl)                   // Line 8
+					F.remove(f);                        // Line 8
+				List<HalfEdge> horizon = getHorizon(p); // Line 9
+				makeNewFaces(p, horizon);               // Lines 10 to 19
 			}
 	}
 	
@@ -144,6 +163,93 @@ public class ConvexHull3D
 					p.cnfl.add(f);
 					f.cnfl.add(p);
 				}
+	}
+	
+	// Get the horizon of the convex hull for a given Point.
+	private static List<HalfEdge> getHorizon(Point p)
+	{
+		List<HalfEdge> horizon = new ArrayList<HalfEdge>();
+		Set<Face> border = new HashSet<Face>();
+		for (Face f : p.cnfl)
+		{
+			f.marked = true;
+			border.remove(f);
+			HalfEdge e = f.edge;
+			for (boolean b=true; b || e != f.edge; b=false, e=e.nxt)
+				if (!e.twn.face.marked)
+					border.add(e.twn.face);
+		}
+		HalfEdge e = border.iterator().next().edge;
+		while (!e.twn.face.marked)
+			e = e.nxt;
+		HalfEdge start = e.twn;
+		for (horizon.add(e), e=e.nxt ;; e=e.twn.nxt)
+		{
+			for (; !e.twn.face.marked && e!=start; e=e.nxt)
+				horizon.add(e);
+			if (e == start)
+				break;
+		}
+		return horizon;
+	}
+	
+	// Creates and attaches the new faces between Point p and its horizon.
+	private static void makeNewFaces(Point p, List<HalfEdge> horizon)
+	{
+		List<Face> faces = new ArrayList<Face>();
+		for (HalfEdge e : horizon)                    // Line 11
+			faces.add(new Face(e.s, e.nxt.s, p));     // Line 11
+		for (int i = 0, n = faces.size(); i < n; i++) // etc
+		{
+			Face f = faces.get(i);
+			f.attach(f.edge.twn.face);
+			f.attach(faces.get((i+1+n)%n));
+			f.attach(faces.get((i-1+n)%n));
+		}
+		for (Face f : faces)
+			if (getSide(f.edge.nxt.s, p, f.edge.s, f.edge.twn.prv.s) == ON)
+				mergeFaces(f.edge.twn.face, f); // Merge faces
+				// When merging, take care of:
+				// - One of the faces must be removed
+				// - Faces within the list 'faces' may have to be merged
+				// - ^ Doesn't have to be a problem, the list won't be reused
+			else
+				addFace(f); // Compute conflicts
+//				if (getSide(f.edge.prv.s, f.edge.s, f.edge.nxt.s, p) == BEFORE)
+	}
+	
+	// Merge Face f2 to Face f1. The conflict graph and F are not updated.
+	private static void mergeFaces(Face f1, Face f2)
+	{
+		// find touching halfedges
+		HalfEdge e = f1.edge;
+		while (e.twn.face == f2) e = e.prv;
+		while (e.twn.face != f2) e = e.nxt;
+		HalfEdge fst = e;
+		while (e.twn.face == f2) e = e.nxt;
+		/*ile (e.twn.face != f2*/e = e.prv; // only loops once anyway
+		HalfEdge lst = e;
+		
+		// update prv and nxt edge links, which basically merges the faces
+		fst.prv.nxt = fst.twn.nxt;
+		fst.twn.nxt.prv = fst = fst.prv;
+		lst.nxt.prv = lst.twn.prv;
+		lst.twn.prv.nxt = lst = lst.nxt;
+		
+		// merge edges if they happen to be collinear
+		if (isCollinear(fst.s, fst.nxt.s, fst.nxt.nxt.s))
+			(fst.nxt=fst.nxt.nxt).prv = fst.nxt.twn.twn = fst;
+		if (isCollinear(lst.prv.s, lst.s, lst.nxt.s))
+			(lst.prv.nxt=lst.nxt).prv = lst.twn.twn = lst.prv;
+		
+		// update the face links of the edges from the added face
+		for (e = fst.nxt; e.face != f1; e = e.nxt)
+			e.face = f1;
+	}
+	
+	// Add Face f to the conflict graph and the convex hull.
+	private static void addFace(Face f)
+	{
 	}
 	
 	// Get and remove a point from P that is not on the same line as p1 & p2
@@ -270,16 +376,17 @@ public class ConvexHull3D
 	// Furthermore it implements a node from a bipartite graph. The nodes of
 	// this graph to which the Face is connected are the Point's in the
 	// conflictlist cnfl. Note that the nodes of the graph are stored in F & P.
-	private static class Face implements Comparable<Face>
+	private static class Face// implements Comparable<Face>
 	{
-		private static int nextId = 0;
-		public final int id;
+//		private static int nextId = 0;
+//		public final int id;
+		public boolean marked;
 		public HalfEdge edge;
 		public List<Point> cnfl = new ArrayList<Point>();
 		
 		public Face(Point a, Point b, Point c)
 		{
-			id = nextId++;
+//			id = nextId++;
 			HalfEdge aa = new HalfEdge(a, this);
 			HalfEdge bb = new HalfEdge(b, this);
 			HalfEdge cc = new HalfEdge(c, this);
@@ -287,6 +394,20 @@ public class ConvexHull3D
 			bb.nxt = aa.prv = cc;
 			cc.nxt = bb.prv = aa;
 			edge = aa;
+		}
+		
+		public void add(Face face)
+		{
+			// TODO Implement a merge of two adjacent faces in the same plane
+			// 
+			// Points of attention:
+			// - One of the two faces must be removed
+			// 
+			// Steps to take:
+			// find first halfedge (fst) that touches other face
+			// fst.prv.nxt = fst.twn.nxt
+			// fst.twn.nxt.prv = fst.prv
+			// find last halfedge (lst) that touches other face
 		}
 		
 		public HalfEdge attach(Face that)
@@ -299,8 +420,8 @@ public class ConvexHull3D
 			return null;
 		}
 
-		@Override public int compareTo(Face that)
-		{return this.id - that.id;}
+//		@Override public int compareTo(Face that)
+//		{return this.id - that.id;}
 	}
 	
 }
