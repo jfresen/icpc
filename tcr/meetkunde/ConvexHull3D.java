@@ -1,7 +1,8 @@
-package bapc2005;
+package tcr.meetkunde;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.Locale;
 import java.util.Scanner;
 import java.util.Set;
 
-public class ProblemD
+public class ConvexHull3D
 {
 	
 	public static final double EPSILON = 0.000000001;
@@ -19,7 +20,7 @@ public class ProblemD
 	public static final int ON     =  0;
 	public static final int AFTER  = -1;
 	
-	private static List<Point> P; // List of points in the input set
+	private static Point[] P; // List of points in the input set
 	private static Set<Face> F;   // Set of faces of the hull
 	
 	public static void main(String[] args) throws Throwable
@@ -29,16 +30,13 @@ public class ProblemD
 		int cases = in.nextInt();
 		while (cases-- > 0)
 		{
-			P = new ArrayList<Point>();
+			P = readProblem(in);
 			F = new HashSet<Face>();
-			int floor = readProblem(in);
-			if (floor == 0)
-				continue;
 			makeConvexHull();
-			double cover = 0;
+			double surfaceArea = 0;
 			for (Face f : F)
-				cover += f.area();
-			System.out.printf("%.4f%n", cover-floor);
+				surfaceArea += f.area();
+			System.out.printf("%.4f%n", surfaceArea);
 		}
 	}
 	
@@ -46,7 +44,7 @@ public class ProblemD
 	// Computational Geometry, De Berg et al., 3rd edition.
 	private static void makeConvexHull()
 	{
-		Collections.shuffle(P);
+		Collections.shuffle(Arrays.asList(P));
 		initializeConvexHull();
 		initializeConflictGraph();
 		for (Point p : P)
@@ -58,38 +56,33 @@ public class ProblemD
 	}
 	
 	// Read the problem as stated in the ICPC BAPC 2005, Problem D.
-	private static int readProblem(Scanner in)
+	private static Point[] readProblem(Scanner in)
 	{
 		int x1 = in.nextInt(), y1 = in.nextInt();
 		int x2 = in.nextInt(), y2 = in.nextInt();
-		int n = in.nextInt();
-		int floor = (x2-x1)*(y2-y1);
-		if (n == 0)
-		{
-			System.out.printf("%d.0000%n", floor);
-			return 0;
-		}
-		P.add(new Point(x1, y1, 0));
-		P.add(new Point(x2, y1, 0));
-		P.add(new Point(x1, y2, 0));
-		P.add(new Point(x2, y2, 0));
-		for (int i = 0; i < n; i++)
+		int i = 0, n = in.nextInt();
+		Point[] P = new Point[4*n+4];
+		P[i++] = new Point(x1, y1, 0);
+		P[i++] = new Point(x2, y1, 0);
+		P[i++] = new Point(x1, y2, 0);
+		P[i++] = new Point(x2, y2, 0);
+		for (int j = 0; j < n; j++)
 		{
 			int x3 = in.nextInt(), y3 = in.nextInt();
 			int x4 = in.nextInt(), y4 = in.nextInt();
 			int h = in.nextInt();
-			P.add(new Point(x3, y3, h));
-			P.add(new Point(x4, y3, h));
-			P.add(new Point(x3, y4, h));
-			P.add(new Point(x4, y4, h));
+			P[i++] = new Point(x3, y3, h);
+			P[i++] = new Point(x4, y3, h);
+			P[i++] = new Point(x3, y4, h);
+			P[i++] = new Point(x4, y4, h);
 		}
-		return floor;
+		return P;
 	}
 	
 	// Make a hull with 4 points that form a tetrahedron.
 	private static void initializeConvexHull()
 	{
-		Point p1 = P.get(0);
+		Point p1 = P[0];
 		Point p2 = getDifferentPoint(p1);
 		Point p3 = getNonCollinearPoint(p1, p2);
 		Point p4 = getNonPlanarPoint(p1, p2, p3);
@@ -161,12 +154,12 @@ public class ProblemD
 	{
 		List<HalfEdge> horizon = new ArrayList<HalfEdge>();
 		Set<Face> border = new HashSet<Face>();
-		for (Face visibleFace : p.cnfl)
+		for (Face f : p.cnfl)
 		{
-			visibleFace.marked = true;
-			border.remove(visibleFace);
-			HalfEdge e = visibleFace.edge;
-			for (boolean b=true; b || e != visibleFace.edge; b=false, e=e.nxt)
+			f.marked = true;
+			border.remove(f);
+			HalfEdge e = f.edge;
+			for (boolean b=true; b || e != f.edge; b=false, e=e.nxt)
 				if (!e.twn.face.marked)
 					border.add(e.twn.face);
 		}
@@ -331,6 +324,8 @@ public class ProblemD
 	// Furthermore it implements a node from a bipartite graph. The nodes of
 	// this graph to which the Face is connected are the Point's in the
 	// conflict set cnfl. Note that the nodes of the graph are stored in F & P.
+	
+	// Now assume that a Face is a Triangle
 	private static class Face
 	{
 		public boolean marked;
@@ -371,4 +366,296 @@ public class ProblemD
 		}
 	}
 	
+}
+
+class ConvexHull3D_2
+{
+	
+	public static final double EPSILON = 0.000000001;
+	
+	// Is a point BEFORE, ON or AFTER a plane defined by three other points?
+	public static final int BEFORE =  1;
+	public static final int ON     =  0;
+	public static final int AFTER  = -1;
+	
+	private static Point[] P;       // Array of points in the input set
+	private static Set<Triangle> T; // Set of triangles of the hull
+	
+	public static void main(String[] args) throws Throwable
+	{
+		Locale.setDefault(Locale.ENGLISH);
+		Scanner in = new Scanner(new File("bapc2005/testdata/d.in"));
+		int cases = in.nextInt();
+		while (cases-- > 0)
+		{
+			P = readProblem(in);
+			T = new HashSet<Triangle>();
+			makeConvexHull();
+			double surfaceArea = 0;
+			for (Triangle t : T)
+				surfaceArea += t.area();
+			System.out.printf("%.4f%n", surfaceArea);
+		}
+	}
+	
+	// Make a convex hull, according to the algorithm on page 249 of
+	// Computational Geometry, De Berg et al., 3rd edition.
+	private static void makeConvexHull()
+	{
+		Collections.shuffle(Arrays.asList(P));
+		initializeConvexHull();
+		initializeConflictGraph();
+		for (Point p : P)
+			if (p.cnfl.size() > 0)
+			{
+				makeNewFaces(p, getHorizon(p));
+				removeConflictTriangles(p);
+			}
+	}
+	
+	// Read the problem as stated in the ICPC BAPC 2005, Problem D.
+	private static Point[] readProblem(Scanner in)
+	{
+		int x1 = in.nextInt(), y1 = in.nextInt();
+		int x2 = in.nextInt(), y2 = in.nextInt();
+		int i = 0, n = in.nextInt();
+		Point[] P = new Point[4*n+4];
+		P[i++] = new Point(x1, y1, 0);
+		P[i++] = new Point(x2, y1, 0);
+		P[i++] = new Point(x1, y2, 0);
+		P[i++] = new Point(x2, y2, 0);
+		for (int j = 0; j < n; j++)
+		{
+			int x3 = in.nextInt(), y3 = in.nextInt();
+			int x4 = in.nextInt(), y4 = in.nextInt();
+			int h = in.nextInt();
+			P[i++] = new Point(x3, y3, h);
+			P[i++] = new Point(x4, y3, h);
+			P[i++] = new Point(x3, y4, h);
+			P[i++] = new Point(x4, y4, h);
+		}
+		return P;
+	}
+	
+	// Make a hull with 4 points that form a tetrahedron.
+	private static void initializeConvexHull()
+	{
+		Point p1 = P[0];
+		Point p2 = getDifferentPoint(p1);
+		Point p3 = getNonCollinearPoint(p1, p2);
+		Point p4 = getNonPlanarPoint(p1, p2, p3);
+		if (getSide(p2, p3, p4, p1) != BEFORE)
+			{Point p = p3; p3 = p4; p4 = p;}
+		Triangle t1 = new Triangle(p1, p2, p3);
+		Triangle t2 = new Triangle(p1, p3, p4);
+		Triangle t3 = new Triangle(p1, p4, p2);
+		Triangle t4 = new Triangle(p2, p4, p3);
+		t1.attach(t2); t2.attach(t3);
+		t1.attach(t3); t2.attach(t4);
+		t1.attach(t4); t3.attach(t4);
+		T.add(t1);     T.add(t3);
+		T.add(t2);     T.add(t4);
+	}
+	
+	// Get a point from P that has different coordinates then p
+	private static Point getDifferentPoint(Point p)
+	{
+		for (Point q : P)
+			if (p.x != q.x || p.y != q.y || p.z != q.z)
+				return q;
+		return null;
+	}
+	
+	// Get a point from P that is not on the same line as p1 & p2
+	private static Point getNonCollinearPoint(Point p1, Point p2)
+	{
+		for (Point p : P)
+			if (!isCollinear(p1, p2, p))
+				return p;
+		return null;
+	}
+	
+	// Get a point from P that is not on the same line as p1 & p2
+	private static Point getNonPlanarPoint(Point p1, Point p2, Point p3)
+	{
+		for (Point p : P)
+			if (getSide(p1, p2, p3, p) != 0)
+				return p;
+		return null;
+	}
+	
+	// Put Point's and Triangle's in each others conflict sets.
+	private static void initializeConflictGraph()
+	{
+		for (Point p : P)
+			for (Triangle t : T)
+				if (isVisible(t, p))
+					addConflict(t, p);
+	}
+	
+	// Add conflict edges between the Triangle t and the Point p.
+	private static void addConflict(Triangle t, Point p)
+	{t.cnfl.add(p); p.cnfl.add(t);}
+	
+	// Updates the conflict set by removing the triangles visible from p.
+	private static void removeConflictTriangles(Point p)
+	{
+		for (Triangle t : p.cnfl)
+			T.remove(t);
+		for (Triangle t : p.cnfl.toArray(new Triangle[0]))
+			for (Point q : t.cnfl)
+				q.cnfl.remove(t);
+	}
+	
+	// Get the horizon of the convex hull for a given Point.
+	private static Triangle[] getHorizon(Point p)
+	{
+		Set<Triangle> border = new HashSet<Triangle>();
+		for (Triangle visibleTriangle : p.cnfl)
+		{
+			visibleTriangle.marked = true;
+			border.remove(visibleTriangle);
+			for (Triangle neighbor : visibleTriangle.t)
+				if (!neighbor.marked)
+					border.add(neighbor);
+		}
+		int i = 0, j = 0, n = border.size();
+		Triangle[] h = new Triangle[n];
+		Triangle t = border.iterator().next();
+		while (!t.t[j].marked)
+			j = (j+1)%3;
+		for (i=0, j=(j+1)%3; i < n; i++, j=(j+1)%3)
+			for (h[i]=t, t.j=j; !t.t[j].marked;)
+				for (t = t.t[j]; t.p[j] != h[i].p(0); j=(j+1)%3);
+		return h;
+	}
+	
+	// Creates and attaches the new triangles between Point p and its horizon.
+	private static void makeNewFaces(Point p, Triangle[] h)
+	{
+		int n = h.length;
+		Triangle[] t = new Triangle[n];
+		for (int i = 0; i < n; i++)
+			t[i] = new Triangle(h[(i+1)%n].p(0), h[i].p(0), p);
+		for (int i = 0; i < n; i++)
+		{
+			t[i].attach(h[i]);
+			t[i].attach(t[(i+1+n)%n]);
+			t[i].attach(t[(i-1+n)%n]);
+			if (isOn(t[i], h[i].p(1)))
+				t[i].cnfl = h[i].cnfl;
+			else
+				addTriangle(t[i], h[i], h[i].t(2));
+			T.add(t[i]);
+		}
+	}
+	
+	// Add Face f to the conflict graph and the convex hull.
+	private static void addTriangle(Triangle t1, Triangle t2, Triangle t3)
+	{
+		for (Point p : t2.cnfl)
+			if (t3.cnfl.contains(p) || isVisible(t1, p))
+				addConflict(t1, p);
+		for (Point p : t3.cnfl)
+			if (t2.cnfl.contains(p) || isVisible(t1, p))
+				addConflict(t1, p);
+	}
+	
+	// Returns whether or not these Points lie in a straight line.
+	private static boolean isCollinear(Point a, Point b, Point c)
+	{
+		double area = .25 * b.subtract(a).crossProduct(c.subtract(a)).length2();
+		return -EPSILON <= area && EPSILON >= area;
+	}
+	
+	// Determines if Point p can see Face f.
+	private static boolean isVisible(Triangle t, Point p)
+	{
+		return getSide(t.p[0], t.p[1], t.p[2], p) == BEFORE;
+	}
+	
+	// Determines if Point p is on the same plane as Face f.
+	private static boolean isOn(Triangle t, Point p)
+	{
+		return getSide(t.p[0], t.p[1], t.p[2], p) == ON;
+	}
+	
+	// Is d ON, BEFORE or AFTER the plane defined by the triangle abc?
+	private static int getSide(Point a, Point b, Point c, Point d)
+	{
+		Point n = b.subtract(a).crossProduct(c.subtract(a));
+		double dist = n.dotProduct(d.subtract(a));
+		double area = .25*n.length2();
+		if (-EPSILON <= area && EPSILON >= area)
+			return ON;
+		if (dist > EPSILON)
+			return BEFORE;
+		if (dist < -EPSILON)
+			return AFTER;
+		return 0;
+	}
+	
+	// A Point is made up of 3 doubles and implements a node from a bipartite
+	// graph. The nodes of this graph to which the Point is connected are the
+	// Face's in the conflict set cnfl. Note that the nodes of the graph are
+	// stored in P & F.
+	private static class Point
+	{
+		public double x, y, z;
+		public Set<Triangle> cnfl = new HashSet<Triangle>();
+		
+		public Point(double x, double y, double z)
+		{this.x=x; this.y=y; this.z=z;}
+		
+		public Point subtract(Point that)
+		{return new Point(this.x-that.x, this.y-that.y, this.z-that.z);}
+		
+		public double length2()
+		{return x*x + y*y + z*z;}
+		
+		public double dotProduct(Point that)
+		{return this.x*that.x + this.y*that.y + this.z*that.z;}
+		
+		public Point crossProduct(Point p)
+		{return new Point(y*p.z - p.y*z, p.x*z - x*p.z, x*p.y - p.x*y);}
+	}
+	
+	// A Face is a part of the convex hull. It is defined by any HalfEdge of its
+	// boundary (edge), which is essentially a linked list of HalfEdge's.
+	// Furthermore it implements a node from a bipartite graph. The nodes of
+	// this graph to which the Face is connected are the Point's in the
+	// conflict set cnfl. Note that the nodes of the graph are stored in F & P.
+	
+	// Now assume that a Face is a Triangle
+	public static class Triangle
+	{
+		public boolean marked;
+		public int j;
+		public Point[] p;
+		public Triangle[] t;
+		public Set<Point> cnfl = new HashSet<Point>();
+		
+		public Triangle(Point a, Point b, Point c)
+		{
+			p = new Point[] {a, b, c};
+		}
+		
+		public Point    p(int i) {return p[(j+i)%3];}
+		public Triangle t(int i) {return t[(j+i)%3];}
+		
+		public void attach(Triangle t)
+		{
+			for (int i = 0; i < 3; i++)
+				for (int j = 0; j < 3; j++)
+					if (p[i] == t.p[(j+1)%3] && p[(i+1)%3] == t.p[j])
+						(this.t[i]=t).t[j] = this;
+		}
+		
+		public double area()
+		{
+			Point v1 = p[1].subtract(p[0]);
+			Point v2 = p[2].subtract(p[0]);
+			return .5*Math.sqrt(v1.crossProduct(v2).length2());
+		}
+	}
 }
