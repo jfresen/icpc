@@ -1983,4 +1983,26 @@ class PrimeGenerator
 				return false;
 		return true;
 	}
+	
+	public static int pi(int x)
+	{
+		int i = Arrays.binarySearch(primes, 0, psize, x);
+		return i < 0 ? ~i : i+1;
+	}
+	
+	public static int pi_approx(int x)
+	{
+		// Pretty good approximation.
+		//                 x
+		// pi(x)  <  -------------    for 4 <= x <= 100,000,000
+		//           log(x) - 1.12
+		//
+		// Since this function seems to be increasing faster then pi(x), it
+		// seems to be safe to assume that it will overestimate for x > 10e8.
+		//
+		// To cover for x <= 4, a lower bound of 10 has been set.
+		
+		return Math.max(10, (int)(x / (Math.log(x)- 1.12)));
+	}
+	
 }
