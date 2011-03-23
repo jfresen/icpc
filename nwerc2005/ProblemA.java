@@ -6,11 +6,13 @@ import java.util.Scanner;
 public class ProblemA
 {
 	
+	static final int N = 1000;
+	
 	static int n, q;
 	static int[] w;
 	static long[] p;
 	static boolean[] done;
-	static long[][] dyn = new long[6][200];
+	static long[][] dyn = new long[6][N];
 	
 	public static void main(String[] args) throws Throwable
 	{
@@ -26,17 +28,19 @@ public class ProblemA
 				p[i] = in.nextLong();
 			for (int i = 1; i <= n; i++)
 				dyn[i][0] = 1;
-			for (int W = 1; W < 200; W++)
+			for (int W = 1; W < N; W++)
 				for (int i = 1; i <= n; i++)
 					dyn[i][W] = dyn[i-1][W] + (w[i]<=W ? dyn[i][W-w[i]] : 0);
 			System.out.printf("    |");
 			for (int i = 1; i <= n; i++)
 				System.out.printf("%7d", w[i]);
 			System.out.println();
-			for (int j = 0; j < 200; j++)
+			for (int j = 0; j < N; j++)
 			{
-				if (j%12 == 0)
+				if (j%8 == 0)
 					System.out.println("----+-----------------------------------");
+				else if (j%4 == 0)
+					System.out.println("- - + - - - - - - - - - - - - - - - - - ");
 				System.out.printf("%3d |", j);
 				for (int i = 1; i <= n; i++)
 					System.out.printf("%7d", dyn[i][j]);

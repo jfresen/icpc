@@ -1,91 +1,41 @@
 package nwerc2005;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.File;
+import java.util.Scanner;
 
-public class ProblemC {
-
-	public static boolean[][] rs; 
-	public static boolean[][][] loop;
-	public static int ansx, ansy, direction, x, y, size;
+public class ProblemC
+{
 	
-	public static void main(String[] args) throws Exception {
-		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-		int n = Integer.parseInt(in.readLine());
-		
-		for (int i = 0; i < n; i++) {
-			String[] token = in.readLine().split(" ");
-			size = Integer.parseInt(token[0]);
-			int r = Integer.parseInt(token[1]);
-			
-			ansx = 0;
-			ansy = 0;
-			
-			rs = new boolean[size+2][size+2];
-			loop = new boolean[size+2][size+2][4];
-			
-			for (int j = 0; j < r; j++) {
-				token = in.readLine().split(" ");
-				int x = Integer.parseInt(token[0]);
-				int y = Integer.parseInt(token[1]);
-				rs[x][y] = true;
+	static final int NORTH = 0;
+	static final int EAST = 1;
+	static final int SOUTH = 2;
+	static final int WEST = 3;
+	
+	public static void main(String[] args) throws Throwable
+	{
+		Scanner in = new Scanner(new File("nwerc2005/testdata/c.in"));
+		int cases = in.nextInt();
+		while (cases-- > 0)
+		{
+			int n = in.nextInt();
+			int r = in.nextInt();
+			boolean[][] board = new boolean[n+1][n+1];
+			for (int i = 0; i < r; i++)
+				board[in.nextInt()][in.nextInt()] = true;
+			int x = in.nextInt();
+			int y = in.nextInt();
+			int d = (x==0 ? EAST : x==n+1 ? WEST : y==0 ? NORTH : SOUTH);
+			while (true)
+			{
+				x += (d==EAST ? 1 : d==WEST ? -1 : 0);
+				y += (d==NORTH ? 1 : d==SOUTH ? -1 : 0);
+				if (x == 0 || x == n+1 || y == 0 || y == n+1)
+					break;
+				if (board[x][y])
+					d = (d+1)%4;
 			}
-			
-			token = in.readLine().split(" ");
-			x = Integer.parseInt(token[0]);
-			y = Integer.parseInt(token[1]);
-			
-			
-			if (x == 0) {
-				direction = 1;
-			}
-			else if (x == size + 1) {
-				direction = 3;
-			}
-			else if (y == 0) {
-				direction = 0;
-			}
-			else {
-				direction = 2;
-			}
-			
-			while (step()) {
-			}
-			
-			System.out.println("" + ansx + " " + ansy);
+			System.out.println(x + " " + y);
 		}
 	}
 	
-	public static boolean step() {
-		// System.err.println("\t" + x + " " + y + " " + direction);
-		if (loop[x][y][direction])
-			return false;
-		
-		loop[x][y][direction] = true;
-		switch (direction) {
-		case 0:
-			y += 1;
-			break;
-		case 1:
-			x += 1;
-			break;
-		case 2:
-			y -= 1;
-			break;
-		case 3:
-			x -= 1;
-			break;		
-		}
-		
-		if (rs[x][y])
-			direction = (direction + 1) % 4;
-		
-		if (x > size || y > size || x == 0 || y == 0) {
-			ansx = x; ansy = y;
-			return false;
-		}
-		
-		return true;
-	}
-
 }
