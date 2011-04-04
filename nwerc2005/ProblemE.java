@@ -8,11 +8,11 @@ public class ProblemE
 	
 	static int n, m;
 	static int[] p, l, r; // parent, leftChild and rightChild arrays
-	static boolean[] t; // trapped or not
+	static boolean[] t, c; // trapped or not, covered or not
 	
 	public static void main(String[] args) throws Throwable
 	{
-		Scanner in = new Scanner(new File("nwerc2005/sampledata/e.in"));
+		Scanner in = new Scanner(new File("nwerc2005/testdata/e.in"));
 		while ((n=in.nextInt()) != 0)
 		{
 			m = in.nextInt();
@@ -20,6 +20,7 @@ public class ProblemE
 			l = new int[n+1];
 			r = new int[n+1];
 			t = new boolean[n+1];
+			c = new boolean[n+1];
 			for (int i = 1; i <= n; i++)
 			{
 				int x = in.nextInt();
@@ -30,8 +31,7 @@ public class ProblemE
 			setLinks(l[1], 1);
 			for (int i = 0; i < m; i++)
 				t[in.nextInt()] = true;
-//			System.out.println("=============================================");
-//			System.out.println(str());
+			System.out.println(setGateways(1));
 		}
 	}
 	
@@ -53,6 +53,47 @@ public class ProblemE
 			setLinks(l[node], node);
 		if (r[node] != 0)
 			setLinks(r[node], node);
+	}
+	
+	private static int setGateways(int i)
+	{
+		// leave node already covered (note: c[i] is only set for leave nodes)
+		if (c[i])
+			return 0;
+		// internal node
+		if (l[i] != 0)
+			return setGateways(l[i]) + (r[i] != 0 ? setGateways(r[i]) : 0);
+		// external node, but a trap
+		if (t[i])
+			return 0;
+		c[i] = true; // not strictly necessary, we're never gonna look at it
+		walkUp(i);
+//		for (int j = i; j != 0 && !t[j]; j = p[j])
+//			for (int k = r[j]; k != 0; k = l[k])
+//				if (t[k])
+//					k = 0;
+//				else if (l[k] == 0)
+//					c[k] = true;
+		return 1;
+	}
+	
+	private static void walkUp(int i)
+	{
+		for (int j=i, rt=0; rt < 2 && p[j] != 0 && !t[p[j]]; j = p[j])
+			if (r[p[j]] == j)
+				rt++;
+			else if (r[p[j]] != 0 && cover(r[p[j]]))
+				rt = 1;
+	}
+	
+	
+	private static boolean cover(int i)
+	{
+		while (!t[i] && l[i] != 0)
+			i = l[i];
+		if (t[i])
+			return false;
+		return c[i] = true;
 	}
 	
 	/**
