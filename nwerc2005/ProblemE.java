@@ -2,17 +2,19 @@ package nwerc2005;
 
 import java.io.File;
 import java.util.Scanner;
+import java.util.Stack;
 
 public class ProblemE
 {
 	
 	static int n, m;
 	static int[] p, l, r; // parent, leftChild and rightChild arrays
-	static boolean[] t, c; // trapped or not, covered or not
+	static boolean[] t;   // trapped or not
+	static char[] s;      // state: [c]lear, [b]locked or [p]artially blocked
 	
 	public static void main(String[] args) throws Throwable
 	{
-		Scanner in = new Scanner(new File("nwerc2005/testdata/e.in"));
+		Scanner in = new Scanner(new File("nwerc2005/sampledata/e.in"));
 		while ((n=in.nextInt()) != 0)
 		{
 			m = in.nextInt();
@@ -20,7 +22,7 @@ public class ProblemE
 			l = new int[n+1];
 			r = new int[n+1];
 			t = new boolean[n+1];
-			c = new boolean[n+1];
+			s = new char[n+1];
 			for (int i = 1; i <= n; i++)
 			{
 				int x = in.nextInt();
@@ -31,69 +33,79 @@ public class ProblemE
 			setLinks(l[1], 1);
 			for (int i = 0; i < m; i++)
 				t[in.nextInt()] = true;
-			System.out.println(setGateways(1));
+			System.out.println(nrOfGateways(1) + (s[1]=='b' ? 0 : 1));
+//			System.out.println(str());
 		}
 	}
 	
 	private static void setLinks(int node, int parent)
 	{
-		while (p[node] != parent)
+		Stack<Integer> stack = new Stack<Integer>();
+		stack.push(node);
+		stack.push(parent);
+		while (!stack.isEmpty())
 		{
-			int x = l[node];
-			l[node] = r[node];
-			r[node] = p[node];
-			p[node] = x;
+			parent = stack.pop();
+			node = stack.pop();
+			while (p[node] != parent)
+			{
+				int x = l[node];
+				l[node] = r[node];
+				r[node] = p[node];
+				p[node] = x;
+			}
+			if (l[node] == 0 && r[node] != 0)
+			{
+				l[node] = r[node];
+				r[node] = 0;
+			}
+			if (l[node] != 0)
+			{
+				stack.push(l[node]);
+				stack.push(node);
+			}
+			if (r[node] != 0)
+			{
+				stack.push(r[node]);
+				stack.push(node);
+			}
 		}
-		if (l[node] == 0 && r[node] != 0)
-		{
-			l[node] = r[node];
-			r[node] = 0;
-		}
-		if (l[node] != 0)
-			setLinks(l[node], node);
-		if (r[node] != 0)
-			setLinks(r[node], node);
 	}
 	
-	private static int setGateways(int i)
+	private static int nrOfGateways(int i)
 	{
-		// leave node already covered (note: c[i] is only set for leave nodes)
-		if (c[i])
-			return 0;
-		// internal node
-		if (l[i] != 0)
-			return setGateways(l[i]) + (r[i] != 0 ? setGateways(r[i]) : 0);
-		// external node, but a trap
-		if (t[i])
-			return 0;
-		c[i] = true; // not strictly necessary, we're never gonna look at it
-		walkUp(i);
-//		for (int j = i; j != 0 && !t[j]; j = p[j])
-//			for (int k = r[j]; k != 0; k = l[k])
-//				if (t[k])
-//					k = 0;
-//				else if (l[k] == 0)
-//					c[k] = true;
-		return 1;
-	}
-	
-	private static void walkUp(int i)
-	{
-		for (int j=i, rt=0; rt < 2 && p[j] != 0 && !t[p[j]]; j = p[j])
-			if (r[p[j]] == j)
-				rt++;
-			else if (r[p[j]] != 0 && cover(r[p[j]]))
-				rt = 1;
-	}
-	
-	
-	private static boolean cover(int i)
-	{
-		while (!t[i] && l[i] != 0)
-			i = l[i];
-		if (t[i])
-			return false;
-		return c[i] = true;
+		// First, process the children:
+		int g = (l[i] != 0 ? nrOfGateways(l[i]) : 0) + (r[i] != 0 ? nrOfGateways(r[i]) : 0);
+		
+		// Second, set the state of this node:
+		// no children
+		if (l[i] == 0)
+			s[i] = t[i] ? 'b' : 'c';
+		// one child
+		else if (r[i] == 0)
+			s[i] = t[i] ? 'b' : s[l[i]];
+		// two children
+		else if (t[i] || (s[l[i]] != 'c' && s[r[i]] != 'c'))
+			s[i] = 'b';
+		else if (s[l[i]] == 'c')
+			s[i] = s[r[i]] == 'c' ? 'c' : 'p';
+		else if (s[r[i]] == 'c')
+			s[i] = s[l[i]] == 'c' ? 'c' : 'p';
+		
+		// Third, count extra gateways:
+		// no children
+		if (l[i] == 0)
+			return g;
+		// one child
+		else if (r[i] == 0)
+			return g + (!t[i] ? 0 : s[l[i]]=='b' ? 0 : 1);
+		// two children
+		else if (s[i] != 'b' || (s[l[i]] == 'b' && s[r[i]] == 'b'))
+			return g;
+		else if (s[l[i]] != 'b' && s[r[i]] != 'b')
+			return g+2;
+		else
+			return g+1;
 	}
 	
 	/**
@@ -126,7 +138,8 @@ public class ProblemE
 		String SPC = " ";
 		// the representation of the root element (dutch: wortel)
 		String w = "\""+node+"\"";
-		String ps = ""+p[node];
+//		String ps = ""+p[node];
+		String ps = node==1 ? "" : t[node] ? "XXX" : "|";
 		int psw = ps.length();
 		// that's all we have to do for leave nodes
 		if (l[node] == 0 && r[node] == 0)
