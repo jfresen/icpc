@@ -36,26 +36,4 @@ public class ProblemC
 		return a < b ? b : a;
 	}
 	
-	public static String print(short[][] cnt, int[] S, int N, int M)
-	{
-		String s = "";
-		for (int i = M; i-- > 0; )
-		{
-			s += String.format("%6d |", i);
-			for (int j = 0; j <= N; j++)
-				s += String.format(" %3d", cnt[j][i]);
-			s += String.format("%n");
-		}
-		s += "-------+";
-		for (int i = 0; i <= N; i++)
-			s += "----";
-		s += String.format("%n       |");
-		for (int i = 1; i <= N; i += 2)
-			s += String.format("  %6d", S[i]);
-		s += String.format("%n       |    ");
-		for (int i = 2; i <= N; i += 2)
-			s += String.format("  %6d", S[i]);
-		return s;
-	}
-	
 }
