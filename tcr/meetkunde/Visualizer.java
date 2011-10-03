@@ -15,40 +15,32 @@ import javax.swing.JPanel;
 
 public class Visualizer
 {
-
+	
+	/*================================= MAIN =================================*/
+	public static void main(String[] args) {showPointsets();}
+	/*========================================================================*/
+	
 	public static JFrame showPointsAndLines(Point[] points, Point[] lines, boolean contiguous)
-	{
-		return showWindow("Geometric figure", new PointsLinesPanel(points, lines, contiguous));
-	}
+	{return showWindow("Geometric figure", new PointsLinesPanel(points, lines, contiguous));}
 	
 	public static JFrame showConvexHull(Point[] points, Point[] hull)
-	{
-		return showWindow("Convex Hull", new ConvexHullPanel(points, hull));
-	}
+	{return showWindow("Convex Hull", new ConvexHullPanel(points, hull));}
 	
 	public static JFrame showYMonotonePolygon(Triangulation.Point[] points, List<Triangulation.Point> monotones)
-	{
-		return showWindow("Polygon Monotonation", new MonotonationPanel(points, monotones));
-	}
+	{return showWindow("Polygon Monotonation", new MonotonationPanel(points, monotones));}
 	
 	public static JFrame showTriangulation(Point[] triangles)
-	{
-		return showWindow("Polygon Triangulation", new TriangulationPanel(triangles));
-	}
-	
-	public static void main(String[] args)
-	{
-		showDelaunayTryoutPanel();
-	}
+	{return showWindow("Polygon Triangulation", new TriangulationPanel(triangles));}
 	
 	public static JFrame showDelaunayTriangulation(Triangle[] t, Point[] p)
-	{
-		return showWindow("Delaunay Triangulation", new DelaunayTriangulationPanel(t, p));
-	}
+	{return showWindow("Delaunay Triangulation", new DelaunayTriangulationPanel(t, p));}
 	
 	public static JFrame showDelaunayTryoutPanel()
+	{return showWindow("Delaunay Tryout", new DelaunayTryOutPanel());}
+	
+	public static JFrame showPointsets(Point[] ... p)
 	{
-		return showWindow("Delaunay Tryout", new DelaunayTryOutPanel());
+		return showWindow("Pointset collection", new PointsetsPanel(p));
 	}
 	
 	private static JFrame showWindow(String title, JPanel panel)
@@ -65,6 +57,11 @@ public class Visualizer
 		
 		return frame;
 	}
+	
+	private static void drawDot(Graphics g, Point p)             {drawDot(g, p, 5);}
+	private static void drawDot(Graphics g, Point p, int s)      {drawDot(g, p.igetX(), p.igetY(), s);}
+	private static void drawDot(Graphics g, int x, int y)        {drawDot(g, x, y, 5);}
+	private static void drawDot(Graphics g, int x, int y, int s) {g.fillOval(x-s/2, y-s/2, s, s);}
 	
 	private static class PointsLinesPanel extends JPanel
 	{
@@ -117,7 +114,7 @@ public class Visualizer
 			{
 				int x = (int)((p.igetX()-lx)*scale + BORDER);
 				int y = (int)((p.igetY()-ly)*scale + BORDER);
-				g.fillOval(x-2, y-2, 5, 5);
+				drawDot(g, x, y);
 			}
 		}
 	}
@@ -138,7 +135,7 @@ public class Visualizer
 		{
 			super.paintComponent(g);
 			for (Point p : points)
-				g.fillOval(p.igetX()-2, p.igetY()-2, 5, 5);
+				drawDot(g, p);
 			int[] x = new int[hull.length];
 			int[] y = new int[hull.length];
 			for (int i = 0; i < hull.length; i++)
@@ -189,7 +186,7 @@ public class Visualizer
 			}
 			g.setColor(Color.BLACK);
 			for (Triangulation.Point p : points)
-				g.fillOval((int)p.x-2, (int)p.y-2, 5, 5);
+				drawDot(g, (int)p.x, (int)p.y);
 			for (int i = 0; i < n; i++)
 				g.drawLine((int)points[i].x, (int)points[i].y,
 				           (int)points[(i+1)%n].x, (int)points[(i+1)%n].y);
@@ -358,7 +355,7 @@ public class Visualizer
 			drawCircumcircle(g, p[1], p[2], p[4]);
 //			g.drawOval(x, y, width, height)
 			for (Point point : p)
-				g.fillOval(point.x-2, point.y-2, 5, 5);
+				drawDot(g, point.x, point.y);
 		}
 		
 		private void drawCircumcircle(Graphics2D g, Point pa, Point pb, Point pc)
@@ -381,6 +378,84 @@ public class Visualizer
 			int x, y;
 			public Point(int x, int y)
 			{this.x=x; this.y=y;}
+		}
+	}
+	
+	private static class PointsetsPanel extends JPanel
+	{
+		private static final long serialVersionUID = -5589755372993774766L;
+		private int rows, cols, gap = 10;
+		private PointsetPanel[] children;
+		
+		public PointsetsPanel(Point[] ... p)
+		{
+			if (p.length == 0)
+				p = new Point[][] {{new PointImpl(0, 0)}};
+			// Determine the dimensions of the matrix of panels
+			rows = (int)Math.round(Math.sqrt((4/3)*p.length));
+			if (rows == 0) rows++;
+			cols = (p.length+rows-1)/rows;
+			
+			int siz = 100;
+			setPreferredSize(new Dimension(gap+(siz+gap)*cols, gap+(siz+gap)*rows));
+			setBackground(new Color(0xFFFF80));
+			
+			children = new PointsetPanel[p.length];
+			for (int i = 0; i < p.length; i++)
+				add(children[i] = new PointsetPanel(p[i]));
+		}
+		
+		@Override
+		protected void paintComponent(Graphics g)
+		{
+			super.paintComponent(g);
+			for (int i = 0, y = gap, h; i < rows; i++)
+			{
+				h = (getHeight()-gap*(rows+1)+i)/rows;
+				for (int j = 0, x = gap, w; j < cols; j++)
+					if (i*cols+j < children.length)
+					{
+						w = (getWidth()-gap*(cols+1)+j)/cols;
+						children[i*cols+j].setBounds(x, y, w, h);
+						x += w + gap;
+					}
+				y += h + gap;
+			}
+		}
+	}
+	
+	private static class PointsetPanel extends JPanel
+	{
+		private static final long serialVersionUID = -708934816071218434L;
+		private double minX=1e10, maxX=-1e10, minY=minX, maxY=maxX;
+		private int padding = 10;
+		private Point[] points;
+		public PointsetPanel(Point ... points)
+		{
+			Random r = new Random();
+			setBackground(new Color(r.nextInt(64)+192, r.nextInt(64)+192, r.nextInt(64)+192));
+			
+			this.points = points;
+			for (Point p : points)
+			{
+				if (minX > p.getX()) minX = p.getX();
+				if (maxX < p.getX()) maxX = p.getX();
+				if (minY > p.getY()) minY = p.getY();
+				if (maxY < p.getY()) maxY = p.getY();
+			}
+			if (minX == maxX) maxX++;
+			if (minY == maxY) maxY++;
+		}
+		
+		@Override
+		protected void paintComponent(Graphics g)
+		{
+			super.paintComponent(g);
+			double fx = (getWidth()-2*padding)/(maxX-minX);
+			double fy = (getHeight()-2*padding)/(maxY-minY);
+			double f = Math.min(fx, fy);
+			for (Point p : points)
+				drawDot(g, (int)(padding+f*(p.getX()-minX)), (int)(padding+f*(p.getY()-minY)));
 		}
 	}
 	
