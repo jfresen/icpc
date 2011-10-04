@@ -20,12 +20,7 @@ public class ProblemE_ekp2003
 	
 	public static void main(String[] args) throws Throwable
 	{
-		new ProblemE_ekp2003();
-	}
-	
-	public ProblemE_ekp2003() throws Throwable
-	{
-		Scanner in = new Scanner(new File("ekp2003\\sampledata\\e.in"));
+		Scanner in = new Scanner(new File("nwerc2003/sampledata/e.in"));
 		int cases = in.nextInt();
 		while (cases-- > 0)
 		{
@@ -44,7 +39,7 @@ public class ProblemE_ekp2003
 		}
 	}
 	
-	private boolean isomorph(Node n, Node m)
+	private static boolean isomorph(Node n, Node m)
 	{
 		if (n.successors != m.successors || n.children.length != m.children.length)
 			return false;
@@ -56,15 +51,13 @@ public class ProblemE_ekp2003
 		{
 			found = false;
 			for (int j = 0; j < m.children.length && !found; j++)
-			{
-				if (used[j]) continue;
-				used[j] = found = isomorph(n.children[i], m.children[j]);
-			}
+				if (!used[j])
+					used[j] = found = isomorph(n.children[i], m.children[j]);
 		}
 		return found;
 	}
 	
-	private void makeTree(Node root, char[] s)
+	private static void makeTree(Node root, char[] s)
 	{
 		for (int i = 0; i < s.length; i++)
 		{
@@ -84,7 +77,7 @@ public class ProblemE_ekp2003
 		}
 	}
 	
-	private class Node
+	private static class Node
 	{
 		public Node parent = null;
 		public ArrayList<Node> childrenArray = new ArrayList<Node>();

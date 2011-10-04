@@ -1737,7 +1737,9 @@ class DelaunayTriangulation
 // or the number of successors of two nodes are unequal.
 // Note: the input is highly problem specific. Don't bother reading it.
 // Note: in the original problem, the roots were fixed. This implementation
-// also allows different roots, which is more general.
+// also allows different roots, which is more general. Therefore, bear in mind
+// that the parent is added to the list of children and should be skipped when
+// iterating the children.
 class TreeIsomorphism //ProblemE_ekp2003
 {
 	
@@ -1783,11 +1785,8 @@ class TreeIsomorphism //ProblemE_ekp2003
 				continue;
 			found = false;
 			for (int j = 0; j < m.children.length && !found; j++)
-			{
-				if (used[j] || m.children[j] == m.parent)
-					continue;
-				used[j] = found = isomorph(n.children[i], m.children[j]);
-			}
+				if (!used[j] && m.children[j] != m.parent)
+					used[j] = found = isomorph(n.children[i], m.children[j]);
 		}
 		return found;
 	}
