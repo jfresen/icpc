@@ -1,4 +1,4 @@
-package tcr.meetkunde;
+package visualize;
 
 public class PointImpl implements Point
 {

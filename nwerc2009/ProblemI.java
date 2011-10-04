@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 import javax.swing.JFrame;
 
-import tcr.meetkunde.Visualizer;
+import visualize.Visualizer;
 
 public class ProblemI
 {
@@ -70,7 +70,7 @@ public class ProblemI
 		return (a.x*b.y - a.y*b.x + a.y*c.x - a.x*c.y + b.x*c.y - c.x*b.y) / 2.0;
 	}
 	
-	private static class Point implements Comparable<Point>, tcr.meetkunde.Point
+	private static class Point implements Comparable<Point>, visualize.Point
 	{
 		int x, y, i;
 		public Point(int x, int y, int i)

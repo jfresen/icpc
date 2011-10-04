@@ -1,4 +1,4 @@
-package tcr.meetkunde;
+package visualize;
 
 public interface Triangle
 {

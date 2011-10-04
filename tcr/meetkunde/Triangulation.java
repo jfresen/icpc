@@ -261,7 +261,7 @@ public class Triangulation
 		return p.x < cx ? -1 : p.x > cx ? 1 : 0;
 	}
 	
-	public static class Point implements Comparable<Point>, tcr.meetkunde.Point
+	public static class Point implements Comparable<Point>, visualize.Point
 	{
 		public double x, y;
 		public Point next, prev;

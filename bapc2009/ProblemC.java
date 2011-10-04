@@ -11,7 +11,7 @@ import java.util.Scanner;
 
 import javax.swing.JFrame;
 
-import tcr.meetkunde.Visualizer;
+import visualize.Visualizer;
 
 public class ProblemC
 {
@@ -156,7 +156,7 @@ public class ProblemC
 		return (a.x*bycy + b.x*cyay + c.x*ayby) / 2.0;
 	}
 	
-	private static class Triangle implements tcr.meetkunde.Triangle
+	private static class Triangle implements visualize.Triangle
 	{
 		Point[] p = new Point[3];
 		Triangle[] t = new Triangle[3];
@@ -220,10 +220,10 @@ public class ProblemC
 		{
 			return "<"+p[0]+","+p[1]+","+p[2]+">";
 		}
-		@Override public tcr.meetkunde.Point get(int i) {return p[i];}
+		@Override public visualize.Point get(int i) {return p[i];}
 	}
 	
-	private static class Point implements Comparable<Point>, tcr.meetkunde.Point
+	private static class Point implements Comparable<Point>, visualize.Point
 	{
 		int x, y;
 		public Point(int x, int y)

@@ -1,4 +1,4 @@
-package tcr.meetkunde;
+package visualize;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -26,7 +26,7 @@ public class Visualizer
 	public static JFrame showConvexHull(Point[] points, Point[] hull)
 	{return showWindow("Convex Hull", new ConvexHullPanel(points, hull));}
 	
-	public static JFrame showYMonotonePolygon(Triangulation.Point[] points, List<Triangulation.Point> monotones)
+	public static JFrame showYMonotonePolygon(Point[] points, List<Point> monotones)
 	{return showWindow("Polygon Monotonation", new MonotonationPanel(points, monotones));}
 	
 	public static JFrame showTriangulation(Point[] triangles)
@@ -150,10 +150,10 @@ public class Visualizer
 	private static class MonotonationPanel extends JPanel
 	{
 		private static final long serialVersionUID = -7401152458083787649L;
-		private Triangulation.Point[] points;
-		private List<Triangulation.Point> monotones;
+		private Point[] points;
+		private List<Point> monotones;
 		private int seed;
-		public MonotonationPanel(Triangulation.Point[] p, List<Triangulation.Point> m)
+		public MonotonationPanel(Point[] p, List<Point> m)
 		{
 			points = p;
 			monotones = m;
@@ -170,14 +170,14 @@ public class Visualizer
 			int n = points.length;
 			int[] x = new int[n];
 			int[] y = new int[n];
-			for (Triangulation.Point p : monotones)
+			for (Point p : monotones)
 			{
-				Triangulation.Point s = p;
+				Point s = p;
 				int i;
-				for (i = 0; i == 0 || p != s; p = p.next, i++)
+				for (i = 0; i == 0 || p != s; p = ((tcr.meetkunde.Triangulation.Point)p).next, i++)
 				{
-					x[i] = (int)p.x;
-					y[i] = (int)p.y;
+					x[i] = (int)p.getX();
+					y[i] = (int)p.getY();
 				}
 				g.setColor(new Color(r.nextInt(256), r.nextInt(256), r.nextInt(256)));
 				g.fillPolygon(x, y, i);
@@ -185,11 +185,11 @@ public class Visualizer
 				g.drawPolygon(x, y, i);
 			}
 			g.setColor(Color.BLACK);
-			for (Triangulation.Point p : points)
-				drawDot(g, (int)p.x, (int)p.y);
+			for (Point p : points)
+				drawDot(g, (int)p.getX(), (int)p.getY());
 			for (int i = 0; i < n; i++)
-				g.drawLine((int)points[i].x, (int)points[i].y,
-				           (int)points[(i+1)%n].x, (int)points[(i+1)%n].y);
+				g.drawLine((int)points[i].getX(), (int)points[i].getY(),
+				           (int)points[(i+1)%n].getX(), (int)points[(i+1)%n].getY());
 		}
 		
 	}

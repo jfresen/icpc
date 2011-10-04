@@ -73,7 +73,7 @@ public class ProblemG
 		return d2/d1;
 	}
 	
-	private static class Point implements Comparable<Point>, tcr.meetkunde.Point
+	private static class Point implements Comparable<Point>, visualize.Point
 	{
 		int x, y;
 		double xd, yd;

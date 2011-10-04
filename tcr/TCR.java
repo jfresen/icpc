@@ -2,7 +2,7 @@ package tcr;
 import java.io.*;
 import java.util.*;
 
-import tcr.meetkunde.Visualizer;
+import visualize.Visualizer;
 
 // Implementation of breath first search. Input file specifies number of nodes,
 // number of edges, the start node, the end node and all connections (tuples of
@@ -1633,9 +1633,9 @@ class DelaunayTriangulation
 		return (a.x*bycy + b.x*cyay + c.x*ayby) / 2.0;
 	}
 	
-	private static class Triangle implements tcr.meetkunde.Triangle
+	private static class Triangle implements visualize.Triangle
 	{
-		@Override public tcr.meetkunde.Point get(int i) {return p[i];}
+		@Override public visualize.Point get(int i) {return p[i];}
 		
 		Point[] p = new Point[3];
 		Triangle[] t = new Triangle[3];
@@ -1695,7 +1695,7 @@ class DelaunayTriangulation
 		}
 	}
 	
-	private static class Point implements Comparable<Point>, tcr.meetkunde.Point
+	private static class Point implements Comparable<Point>, visualize.Point
 	{
 		int x, y;
 		public Point(int x, int y)

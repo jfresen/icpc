@@ -73,7 +73,7 @@ public class ConvexHull
 		return (a.x*b.y - a.y*b.x + a.y*c.x - a.x*c.y + b.x*c.y - c.x*b.y) / 2;
 	}
 	
-	public static class Point implements Comparable<Point>, tcr.meetkunde.Point
+	public static class Point implements Comparable<Point>, visualize.Point
 	{
 		public double x, y;
 		public Point(double x, double y)
