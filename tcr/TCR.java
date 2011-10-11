@@ -473,7 +473,7 @@ class EdmondsKarp
 
 
 // Implementation of a bipartite maximum matching algorithm and partial
-// application of König's theorem to find the equivalent minimum vertex cover.
+// application of Kï¿½nig's theorem to find the equivalent minimum vertex cover.
 // The bipartite maximum matching algorithm works as follows: Iterate over all
 // nodes on the left side of the graph, and find an alternating path for all
 // unmatched nodes. Flip the matching on the path and continue with the next
@@ -484,7 +484,7 @@ class EdmondsKarp
 // Flipping the matching means that all unmatched edges become matched edges and
 // visa versa.
 //
-// König's theorem reads as follows: In any bipartite graph, the number of edges
+// Kï¿½nig's theorem reads as follows: In any bipartite graph, the number of edges
 // in a maximum matching is equal to the number of vertices in a minimum vertex
 // cover (VC). Given the matching, the VC is constructed as follows:
 // Put all unmatched left side nodes (L) in T, and add all nodes that are
@@ -529,7 +529,7 @@ class BipartiteMaximumMatching//ProblemC_ekp2008
 				curr = next;
 			}
 		}
-		// construct T (see König's Theorem)
+		// construct T (see Kï¿½nig's Theorem)
 		while (!q.isEmpty())
 		{
 			int u = q.remove();
@@ -655,7 +655,80 @@ class TreeIsomorphism //ProblemE_ekp2003
 
 
 
-//TODO: implementation of Tarjan's Algorithm for finding of Strongly Connected Components (+ explanation what a SCC is!!)
+// Implementation of Tarjan's Algorithm, which finds all strongly connected
+// components (SCCs). An SCC is a maximal set of nodes such that all nodes can
+// reach all other nodes.
+// The algorithm works by doing a depth-first search while keeping track of the
+// so called lowlink. The lowlink specifies the root of an SCC, where the root
+// is just the node in the component with the lowest index number. When a node
+// finds itself connected to a node with a lower lowlink, it copies that
+// lowlink. When, after checking all links, a node still has a lowlink equal to
+// its index number, it must be the root of a strongly connected component and
+// all nodes that are at the stack above the root are part of the component.
+// After the completion of the algorithm, the array 'lowlink' indicates all
+// SCCs. All nodes that share the same lowlink are in the same component.
+class Tarjan
+{
+	private int n;
+	private List<Integer>[] d_edges;
+	private int nextIndex;
+	private int[] index;
+	private int[] lowlink;
+	private boolean[] inStack;
+	private Stack<Integer> stack;
+	
+	public void tarjan()
+	{
+		// Setup Tarjan's algorithm:
+		nextIndex = 0;
+		index = new int[n];
+		lowlink = new int[n];
+		inStack = new boolean[n];
+		stack = new Stack<Integer>();
+		Arrays.fill(index, -1);
+		
+		// Execute Tarjan's algorithm, starting from each node whose SCC
+		// is not yet calculated.
+		for (int i = 0; i < n; i++)
+			if (index[i] == -1)
+				tarjan(i);
+		// Find the largest SCC in O(n) time and space:
+		int[] sizes = new int[n];
+		for (int i = 0; i < n; i++)
+			sizes[lowlink[i]]++;
+		int max = 0;
+		for (int i = 0; i < n; i++)
+			if (sizes[max] < sizes[i])
+				max = i;
+		System.out.println(sizes[max]);
+	}
+	
+	private void tarjan(int v)
+	{
+		index[v] = nextIndex++;         // set depth index for v
+		lowlink[v] = index[v];          // init the lowlink
+		stack.push(v);                  // push v on the stack
+		inStack[v] = true;              // mark v as 'in the stack'
+		for (int w : d_edges[v])        // consider all nodes w, adjacent to v
+		{
+			if (index[w] == -1)         // was neighbor w visited?
+			{
+				tarjan(w);              // recurse
+				lowlink[v] = Math.min(lowlink[v], lowlink[w]);
+			}
+			else if (inStack[w])        // was neighbor w in the stack?
+				lowlink[v] = Math.min(lowlink[v], index[w]);
+		}
+		if (lowlink[v] == index[v])     // is v the root of an SCC?
+			for (int w = stack.peek()+1; w != v;)
+			{
+				w = stack.pop();        // then pop all nodes from the stack,
+				inStack[w] = false;     // they are part of the SCC
+				lowlink[w] = index[v];  // lowlink now contains the cluster id
+			}
+	}
+	
+}
 
 
 
