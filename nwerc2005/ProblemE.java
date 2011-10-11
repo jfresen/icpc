@@ -3,6 +3,7 @@ package nwerc2005;
 import java.io.File;
 import java.util.Scanner;
 
+// TODO: What does this problem solve? How does it do that?
 public class ProblemE
 {
 	
@@ -69,7 +70,7 @@ public class ProblemE
 		int g = 0;
 		if (l[n] != 0) g += nrOfGateways(l[n]);
 		if (r[n] != 0) g += nrOfGateways(r[n]);
-			
+		
 		// Second, set the state of this node:
 		// no children
 		if (l[n] == 0)

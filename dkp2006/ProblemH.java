@@ -146,7 +146,6 @@ class HPoint implements Comparable {
 	
 	public HPoint(boolean isStart, double x) {
 		super();
-		// TODO Auto-generated constructor stub
 		this.isStart = isStart;
 		this.x = x;
 	}

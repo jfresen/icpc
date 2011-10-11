@@ -1,6 +1,20 @@
 package tcr;
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Random;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.Stack;
 
 import visualize.Visualizer;
 
@@ -40,8 +54,95 @@ class BFS
 				for (int i : edges[q.remove()])
 					if (!seen[i])
 						seen[i] = q.add(i); // add() always returns true
+			// To find the number of hops from s, store the length of the queue
+			// before each iteration, continue that many times, increment the
+			// hopcount, and start over with storing the length of the queue.
 			System.out.println(seen[end] ? "reachable" : "unreachable");
 		}
+	}
+}
+
+
+
+// Implementation of a colored depth-first search (cycle detection). The idea
+// behind this algoritm is as follows:
+// Initially, all nodes are WHITE. Do a depth-first search and flag each node
+// you are visiting as GREY. Note that putting it in the stack is not the same
+// as visiting. When we put a node in the stack that is GREY, we have a cycle.
+// Mark a node as BLACK if we've visited all adjacent nodes.
+class CDFS
+{
+	// Colors to tag nodes with
+	public static final int WHITE = 0;
+	public static final int GREY  = 1;
+	public static final int BLACK = 2;
+	
+	// Returns true if the graph contains a cycle.
+	// n = number of nodes; edges = list of outgoing edges per node
+	public static boolean cdfs(int n, List<Integer>[] edges)
+	{
+		int[] color = new int[n];
+		Stack<Integer> s = new Stack<Integer>();
+		for (int i = 0, u; i < n; i++)                 // Consider each node
+			if (color[i] == WHITE)                     // Start at WHITE nodes
+				for (s.push(i); !s.isEmpty();)         // Visit nodes in stack
+					if (color[u=s.pop()] == GREY)      // If popped node is GREY
+						color[u] = BLACK;              // mark it as BLACK
+					else
+					{
+						color[s.push(u)] = GREY;       // Mark node u as GREY
+						for (int v : edges[u])         // Consider neighbors v
+							if (color[v] == WHITE)     // If node v is WHITE
+								s.push(v);             // push v in the stack
+							else if (color[v] == GREY) // If node v is GREY
+								return true;           // we found a cycle
+					}
+		return false;
+	}
+	
+}
+
+
+
+// Implementation of a topological sort to find cycles. The idea behind this
+// algorithm is as follows: Start with counting the number of incoming edges per
+// node. Then, find all nodes that have no incoming edges and store these
+// candidates in a queue. Now, as long as there are candidates, 'remove' the
+// candidates one by one, while updating the incoming edge count and adding all
+// nodes to the queue that have no more incoming edges. If there are still
+// unvisited nodes after the queue is empty, there is a cycle.
+class TopologicalSort
+{
+	// Returns true if there is a cycle in the graph
+	// n = number of nodes; edges = list of outgoing edges per node
+	public static boolean topologicalSort(int n, List<Integer>[] edges)
+	{
+		// Setup datastructures:
+		Queue<Integer> q = new LinkedList<Integer>();
+		int[] counts = new int[n];
+		int seen = 0;
+		
+		// Count all incoming edges per node
+		for (int i = 0; i < n; i++)
+			for (int j : edges[i])
+				counts[j]++;
+		
+		// Find nodes without incoming edges
+		for (int i = 0; i < n; i++)
+			if (counts[i] == 0)
+				q.add(i);
+		
+		// Remove nodes
+		while (!q.isEmpty())
+		{
+			seen++;
+			for (int i : edges[q.remove()])
+				if (--counts[i] == 0)
+					q.add(i);
+		}
+		
+		// There was a cycle if we haven't seen all nodes
+		return seen != n;
 	}
 }
 
@@ -52,7 +153,7 @@ class BFS
 // (triples of three ints from, to and length). Node numbers start from 0.
 // This does not keep track of the actual path. To do so, add 'int prev' to the
 // Node class and 'int[] prev = new int[n]' to the algorithm. Create nodes with
-// nd.i as the prev and in the if body also set 'prev[nd.i] = nd.prev'.
+// nd.i as the prev and when updating len[nd.i] also set 'prev[nd.i] = nd.prev'.
 class Dijkstra
 {
 	public static void main(String[] args) throws Throwable
@@ -84,10 +185,9 @@ class Dijkstra
 			while (!q.isEmpty())
 			{
 				Node nd = q.remove();
-				if (len[nd.i] > nd.l)
-					len[nd.i] = nd.l;
-				else
+				if (len[nd.i] <= nd.l)
 					continue;
+				len[nd.i] = nd.l;
 				for (Edge e : edges[nd.i])
 					q.add(new Node(e.t, nd.l+e.l));
 			}
@@ -306,20 +406,20 @@ class EdmondsKarp
 				edges[u].add(e1);
 				edges[v].add(e2);
 			}
-			int[] pre = new int[n], que = new int[n], d = new int[n];
+			int[] pre = new int[n], que = new int[n], flw = new int[n];
 			while (true)
 			{
 				// do BFS to find a path
 				Arrays.fill(pre, -1); pre[s] = s;
 				int p=0, q=0, u, v, j;
-				d[s] = Integer.MAX_VALUE;
+				flw[s] = Integer.MAX_VALUE;
 				que[q++] = s;
 				while (p < q && pre[t] < 0)
 					for (Edge e : edges[u=que[p++]])
 						if (pre[v=e.v] < 0 && (j=e.c-e.f) != 0)
 						{
 							pre[que[q++]=v] = u;
-							d[v] = Math.min(d[u], j);
+							flw[v] = Math.min(flw[u], j);
 						}
 				// if no path found, stop the algorithm
 				if (pre[t] < 0) break;
@@ -328,15 +428,34 @@ class EdmondsKarp
 					for (Edge e : edges[pre[i]])
 						if (e.v == i)
 						{
-							e.f += d[t];
-							e.dual.f -= d[t];
+							e.f += flw[t];
+							e.dual.f -= flw[t];
 						}
 			}
 			// then, calculate the weight of the cut
 			int size = 0;
 			for (Edge e : edges[s])
 				size += e.f;
-			System.out.println(size * 1000);
+			// or do a bfs to find all nodes on the left side of the cut
+			que = new int[n];
+			boolean[] seen = new boolean[n];
+			int p=0, q=0, v;
+			seen[que[q++] = s] = true;
+			while (p < q)
+				for (Edge e : edges[que[p++]])
+					if (!seen[v=e.v] && (e.c-e.f)!= 0)
+						seen[que[q++]=v] = true;
+			// and show the answers
+			System.out.println("Max flow: " + size);
+			System.out.print("Left side of the cut: [");
+			for (int i = 0; i < n; i++)
+				if (seen[i])
+					System.out.println(i+", ");
+			System.out.print("]\nRight side of the cut: [");
+			for (int i = 0; i < n; i++)
+				if (!seen[i])
+					System.out.println(i+", ");
+			System.out.println("]");
 		}
 	}
 	
@@ -350,62 +469,110 @@ class EdmondsKarp
 		public String toString()
 		{return "("+u+","+v+") ["+f+"/"+c+"]";}
 	}
+	
 }
 
 
 
-// Solves the following problem: given an unweighted graph, how many nodes are
-// 10 steps or more away from a certain node?
-// The input is quite problem specific, but the BFS is the interesting part. It
-// exploits an interesting property of the BFS algorithm: when all nodes that
-// are reachable in n-1 or fewer steps have been visited, the size of the queue
-// equals the number of nodes that are reachable in n steps, but not in n-1 or
-// fewer. Using this property, it is easy to keep track of the 'hop count' (see
-// the triple for-loop in the code).
-class ProblemB_dkp2005
+//TODO: rewrite to general maximal matching algorithm
+//Solves the following problem: given two arbitrary groups of items A and B and
+//a set of agents, each agent of which votes to remove a certain item from one
+//group and to keep a certain item from the other group. For how many agents
+//can both votes be satisfied?
+//Making a bipartite graph with the agents that want to keep an item from A
+//(A-lovers) as the first set of nodes and the other agents (B-lovers) as the
+//other set of nodes. An A-lover and a B-lover are connected if their votes are
+//incompatible. Then, the solution is the number of vertices that are not in
+//the minimum vertex cover. Now, find a maximal matching and use Königs Theorem
+//to get the answer.
+//Note: in the implementation below, group A are cats and group B are dogs.
+//
+//Königs theorem reads as follows:
+//In any bipartite graph, the number of edges in a maximum matching is equal to
+//the number of vertices in a minimum vertex cover.
+//
+//If the actual vertex cover is needed, construct it as follows:
+//Consider a bipartite graph where the vertices are partitioned into left (L)
+//and right (R) sets. Suppose there is a maximum matching which partitions the
+//edges into those used in the matching (Em) and those not (E0). Let T consist
+//of all unmatched vertices from L, as well as all vertices reachable from
+//those by going left-to-right along edges from E0 and right-to-left along
+//edges from Em. This essentially means that for each unmatched vertex in L, we
+//add into T all vertices that occur in a path alternating between edges from
+//E0 and Em. Then (L \ T) union (R disjun T) is a minimum vertex cover.
+class ProblemC_ekp2008
 {
+	public static final int LEFT = 0, RIGHT = 1;
 	
-	public static void main(String[] args) throws Throwable
+	private static int n;
+	private static int[] type;
+	private static List<Integer>[] edges;
+	private static int[] match; // match[i] = the node to which i is matched
+	private static int[] prev;  // prev[i] = previous node in alternating path
+	
+	public static int maximumMatching()
 	{
-		new ProblemB_dkp2005();
+		int matches = 0;
+		match = new int[n];
+		prev = new int[n];
+		Arrays.fill(match, -1);
+		Arrays.fill(prev, -1);
+		
+		// apply matching algorithm
+		for (int i = 0; i < n; i++)
+		{
+			if (type[i] != LEFT)              // or != RIGHT if you're
+				continue;                     // starting at the RIGHT side
+			int curr = bfs(i), next;          // find an alternating path
+			// special case: no end means node is in T
+			if (curr == -1)
+				continue;
+			// flip the matching on the path
+			while (curr != -1)
+			{
+				match[curr] = prev[curr];
+				match[prev[curr]] = curr;
+				next = prev[prev[curr]];
+				prev[curr] = prev[prev[curr]] = -1;
+				curr = next;
+			}
+			// count the match
+			matches++;
+		}
+		return matches;
 	}
 	
-	public ProblemB_dkp2005() throws Throwable
+	private static int bfs(int s)
 	{
-		Scanner in = new Scanner(new File("tcr/sampledata/b-dkp2005.in"));
-		int cases = in.nextInt();
-		while (cases-- > 0)
+		prev[s] = -1; // backwards compatibility with dfs... I think
+		Queue<Integer> q = new LinkedList<Integer>();
+		boolean[] visited = new boolean[n];
+		visited[s] = q.add(s);
+		while (!q.isEmpty())
 		{
-			// Read input; build adjacency matrix
-			int h = in.nextInt();
-			int c = in.nextInt();
-			boolean[][] conn = new boolean[h+1][h+1];
-			for (int i = 0, p, q; i < c; i++)
-				conn[p=in.nextInt()][q=in.nextInt()] = conn[q][p] = true;
-			// Flip connections
-			int l = in.nextInt();
-			for (int i = 0, p, q; i < l; i++)
-				conn[p=in.nextInt()][q=in.nextInt()] = conn[q][p] = !conn[q][p];
-			
-			// Do breadthfirst in iterations
-			boolean[] visited = new boolean[h+1];
-			LinkedList<Integer> queue = new LinkedList<Integer>();
-			int u = 0;
-			visited[1] = true;
-			queue.addLast(1);
-			for (int hp = 0, s, i; !queue.isEmpty(); u += hp<=10 ? 0 : s, ++hp)
-				for (s = queue.size(), i = 0; i < s; i++)
-					for (int j = 1, n = queue.removeFirst(); j <= h; j++)
-						if (conn[n][j] && !visited[j])
-						{
-							visited[j] = true;
-							queue.addLast(j);
-						}
-			System.out.println(u);
+			int i = q.remove();
+			// base case: found the end of a path
+			if (type[i] == RIGHT && match[i] == -1)
+				return i;
+			// if it's a doglover, continue with the only possible catlover
+			else if (type[i] == 'D')
+				visited[i] = q.add(match[prev[match[i]] = i]);
+			// for catlovers, expand to all possible doglovers
+			else if (type[i] == 'C')
+				for (int j = 0; j < numEdges[i]; j++)
+					if (!visited[edges[i][j]])
+						visited[edges[i][j]] = q.add(edges[prev[edges[i][j]]=i][j]);
 		}
+		return -1;
 	}
 	
 }
+
+
+
+
+// TODO: implementation of Tarjan's Algorithm for finding of Strongly Connected Components (+ explanation what a SCC is!!)
+// TODO: implementation of Levenshtein distance
 
 
 
@@ -491,191 +658,6 @@ class Maze
 		public Tuple(int xx, int yy, int steps)
 		{x=xx; y=yy; s=steps;}
 	}
-}
-
-
-
-// Solves the following problem: given two words, S and T, is S a substring of
-// T? Naïve solutions use an O(n*m) algorithm, while this is only O(n+m).
-// First, S is preprocessed so we know where to jump to when we encounter a
-// different character during the search through T, then we search linearly
-// through T.
-class ProblemG_dkp2006
-{
-	
-	public static void main(String[] args) throws Exception
-	{
-		BufferedReader in =new BufferedReader(new InputStreamReader(System.in));
-		int cases = Integer.parseInt(in.readLine());
-		while (cases-- > 0)
-		{
-			String t = in.readLine();
-			String s = in.readLine();
-			
-			int i, j, T = t.length(), S = s.length(), c = 0;
-			int[] x = new int[T + 1];
-			
-			// preprocessing step
-			for (i = 1, j = 0; i < T;)
-				if (t.charAt(i) == t.charAt(j))
-				{
-					i++;
-					j++;
-					x[i] = j;
-				}
-				else if (j > 0)
-					j = x[j];
-				else
-					i++;
-			
-			// actual search for matches
-			for (i = 0, j = 0; i < S;)
-				if (s.charAt(i) == t.charAt(j))
-				{
-					i++;
-					j++;
-					if (j == T)
-					{
-						c++;
-						j = x[j];
-					}
-				}
-				else if (j > 0)
-					j = x[j];
-				else
-					i++;
-
-			System.out.println(c);
-		}
-	}
-}
-
-
-
-// Solves the following problem: given two arbitrary groups of items A and B and
-// a set of agents, each agent of which votes to remove a certain item from one
-// group and to keep a certain item from the other group. For how many agents
-// can both votes be satisfied?
-// Making a bipartite graph with the agents that want to keep an item from A
-// (A-lovers) as the first set of nodes and the other agents (B-lovers) as the
-// other set of nodes. An A-lover and a B-lover are connected if their votes are
-// incompatible. Then, the solution is the number of vertices that are not in
-// the minimum vertex cover. Now, find a maximal matching and use K�nigs Theorem
-// to get the answer.
-// Note: in the implementation below, group A are cats and group B are dogs.
-//
-// K�nigs theorem reads as follows:
-// In any bipartite graph, the number of edges in a maximum matching is equal to
-// the number of vertices in a minimum vertex cover.
-//
-// If the actual vertex cover is needed, construct it as follows:
-// Consider a bipartite graph where the vertices are partitioned into left (L)
-// and right (R) sets. Suppose there is a maximum matching which partitions the
-// edges into those used in the matching (Em) and those not (E0). Let T consist
-// of all unmatched vertices from L, as well as all vertices reachable from
-// those by going left-to-right along edges from E0 and right-to-left along
-// edges from Em. This essentially means that for each unmatched vertex in L, we
-// add into T all vertices that occur in a path alternating between edges from
-// E0 and Em. Then (L \ T) union (R disjun T) is a minimum vertex cover.
-class ProblemC_ekp2008
-{
-
-	private static int v;
-	private static int[] match;
-	private static int[] prev;
-	private static char[] type;
-	private static int[][] edges;
-	private static int[] numEdges;
-
-	public static void main(String[] args) throws Throwable
-	{
-		Scanner in = new Scanner(new File("tcr/sampledata/c-ekp2008.in"));
-		int cases = in.nextInt();
-		while (cases-- > 0)
-		{
-			in.nextInt(); // we don't need the number of cats
-			in.nextInt(); // and dogs...
-			v = in.nextInt();
-			
-			// read the votes
-			int[] pre = new int[v];
-			int[] con = new int[v];
-			type = new char[v]; // 'C' means a catlover, 'D' means a doglover
-			for (int i = 0; i < v; i++)
-			{
-				String vote = in.next();
-				pre[i] = Integer.valueOf(vote.substring(1));
-				con[i] = Integer.valueOf(in.next().substring(1));
-				type[i] = vote.charAt(0); // first vote is what (s)he loves
-			}
-			
-			// construct the bipartite graph
-			edges = new int[v][v];
-			numEdges = new int[v];
-			for (int i = 0; i < v; i++)
-				for (int j = 0; j < v; j++)
-				   if (type[i] != type[j] && (pre[i]==con[j] || con[i]==pre[j]))
-					   edges[i][numEdges[i]++] = j;
-			
-			// setup matching algorithm
-			match = new int[v]; // per node: to which node does the matched edge
-			                    //           go? (-1 if no matched edge)
-			prev = new int[v];  // the previous node in the alternating path
-			Arrays.fill(match, -1);
-			Arrays.fill(prev, -1);
-			int matches = 0;
-			
-			// apply matching algorithm
-			for (int i = 0; i < v; i++)
-			{
-				if (type[i] != 'C')
-					continue;
-				// find an alternating path
-				int curr = bfs(i), next;
-				// special case: no end means cat is in T
-				if (curr == -1)
-					continue;
-				// flip the matching on the path
-				while (curr != -1)
-				{
-					match[curr] = prev[curr];
-					match[prev[curr]] = curr;
-					next = prev[prev[curr]];
-					prev[curr] = prev[prev[curr]] = -1;
-					curr = next;
-				}
-				// count the match
-				matches++;
-			}
-			
-			System.out.println(v-matches);
-		}
-	}
-	
-	private static int bfs(int s)
-	{
-		prev[s] = -1; // backwards compatibility with dfs... I think
-		Queue<Integer> q = new LinkedList<Integer>();
-		boolean[] visited = new boolean[v];
-		visited[s] = q.add(s);
-		while (!q.isEmpty())
-		{
-			int i = q.remove();
-			// base case: found the end of a path
-			if (type[i] == 'D' && match[i] == -1)
-				return i;
-			// if it's a doglover, continue with the only possible catlover
-			else if (type[i] == 'D')
-				visited[i] = q.add(match[prev[match[i]] = i]);
-			// for catlovers, expand to all possible doglovers
-			else if (type[i] == 'C')
-				for (int j = 0; j < numEdges[i]; j++)
-				  if (!visited[edges[i][j]])
-				    visited[edges[i][j]] = q.add(edges[prev[edges[i][j]]=i][j]);
-		}
-		return -1;
-	}
-	
 }
 
 
@@ -1728,6 +1710,7 @@ class DelaunayTriangulation
 
 
 
+// TODO: remove problem specific code (here: conversion of char-array to tree)
 // Solves the following problem: given two trees, are they isomorphic?
 // A tree is represented by a root node. Each node has a list of 0 or more
 // children and stores the total number of children (successors). The parent
@@ -1771,6 +1754,7 @@ class TreeIsomorphism //ProblemE_ekp2003
 		return false;
 	}
 	
+	// Nodes n and m are the roots of the two trees that are being compared.
 	private static boolean isomorph(Node n, Node m)
 	{
 		if (n.successors != m.successors || n.children.length != m.children.length)
@@ -1879,7 +1863,7 @@ class Binomial
 // not make a difference in a programming contest.
 class GCD
 {
-	// Marginally faster then the euclidean gcd algorithm.
+	// Marginally faster than the euclidean gcd algorithm.
 	public static int gcd_binary(int u, int v)
 	{
 		int k, d;
@@ -1903,7 +1887,7 @@ class GCD
 		return u << k;
 	}
 	
-	// Marginally slower then the binary gcd algorithm.
+	// Marginally slower than the binary gcd algorithm.
 	public static int gcd_euclidean(int a, int b)
 	{
 		for (int t; b != 0; a = t)
