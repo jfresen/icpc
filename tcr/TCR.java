@@ -11,12 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.Stack;
-
-import visualize.Visualizer;
 
 // Implementation of breath first search. Input file specifies number of nodes,
 // number of edges, the start node, the end node and all connections (tuples of
@@ -65,11 +62,12 @@ class BFS
 
 
 // Implementation of a colored depth-first search (cycle detection). The idea
-// behind this algoritm is as follows:
+// behind this algorithm is as follows:
 // Initially, all nodes are WHITE. Do a depth-first search and flag each node
 // you are visiting as GREY. Note that putting it in the stack is not the same
 // as visiting. When we put a node in the stack that is GREY, we have a cycle.
 // Mark a node as BLACK if we've visited all adjacent nodes.
+// Note that in an undirected graph, a BFS suffices to find cycles.
 class CDFS
 {
 	// Colors to tag nodes with
@@ -117,7 +115,7 @@ class TopologicalSort
 	// n = number of nodes; edges = list of outgoing edges per node
 	public static boolean topologicalSort(int n, List<Integer>[] edges)
 	{
-		// Setup datastructures:
+		// Setup data structures:
 		Queue<Integer> q = new LinkedList<Integer>();
 		int[] counts = new int[n];
 		int seen = 0;
@@ -173,11 +171,11 @@ class Dijkstra
 			for (int i = 0; i < m; i++)
 				edges[in.nextInt()].add(new Edge(in.nextInt(), in.nextInt()));
 			// undirected graph:
-//		   for (int i = 0, f, t, w; i < m; i++)
-//		   {
+//			for (int i = 0, f, t, w; i < m; i++)
+//			{
 //			edges[f=in.nextInt()].add(new Edge(t=in.nextInt(), w=in.nextInt()));
 //			edges[t].add(new Edge(f, w));
-//		   }
+//			}
 			int[] len = new int[n]; // len[i] = length from start node to node i
 			Arrays.fill(len, Integer.MAX_VALUE);
 			PriorityQueue<Node> q = new PriorityQueue<Node>();
@@ -290,7 +288,7 @@ class FloydWarshall
 		// undirected graph:
 //		for (int i = 0, f, t; i < m; i++)
 //			l[f=in.nextInt()][t=in.nextInt()] = l[t][f] = in.nextInt();
-		// Here is the actual floyd-warshall algorithm:
+		// Here is the actual Floyd-Warshall algorithm:
 		for (int k = 0, w; k < n; k++)
 			for (int i = 0; i < n; i++)
 				for (int j = 0; j < n; j++)
@@ -382,7 +380,7 @@ class Kruskal
 // also inserts the dual edge, but now with a capacity of 0. The rest of the
 // algorithm stays the same. An optimization may be to replace all (u,v)-edges
 // by one (u,v)-edge, whose capacity is the sum of all (u,v)-edges.
-// Note that an adjacency matrix is the easiest datastructure, with two
+// Note that an adjacency matrix is the easiest data structure, with two
 // int[n][n] arrays for the capacity and the flow, all initialized to zeros.
 // With many nodes, however, this requires too much memory. 
 class EdmondsKarp
@@ -474,94 +472,97 @@ class EdmondsKarp
 
 
 
-//TODO: rewrite to general maximal matching algorithm
-//Solves the following problem: given two arbitrary groups of items A and B and
-//a set of agents, each agent of which votes to remove a certain item from one
-//group and to keep a certain item from the other group. For how many agents
-//can both votes be satisfied?
-//Making a bipartite graph with the agents that want to keep an item from A
-//(A-lovers) as the first set of nodes and the other agents (B-lovers) as the
-//other set of nodes. An A-lover and a B-lover are connected if their votes are
-//incompatible. Then, the solution is the number of vertices that are not in
-//the minimum vertex cover. Now, find a maximal matching and use KÃ¶nigs Theorem
-//to get the answer.
-//Note: in the implementation below, group A are cats and group B are dogs.
+// Implementation of a bipartite maximum matching algorithm and partial
+// application of König's theorem to find the equivalent minimum vertex cover.
+// The bipartite maximum matching algorithm works as follows: Iterate over all
+// nodes on the left side of the graph, and find an alternating path for all
+// unmatched nodes. Flip the matching on the path and continue with the next
+// left side node.
+// An alternating path is a path whose edges alternate between edges that are
+// used in the matching and edges that are not used in the matching. (Thus
+// left-to-right edges are unmatched and right-to-left edges are matched edges.)
+// Flipping the matching means that all unmatched edges become matched edges and
+// visa versa.
 //
-//KÃ¶nigs theorem reads as follows:
-//In any bipartite graph, the number of edges in a maximum matching is equal to
-//the number of vertices in a minimum vertex cover.
-//
-//If the actual vertex cover is needed, construct it as follows:
-//Consider a bipartite graph where the vertices are partitioned into left (L)
-//and right (R) sets. Suppose there is a maximum matching which partitions the
-//edges into those used in the matching (Em) and those not (E0). Let T consist
-//of all unmatched vertices from L, as well as all vertices reachable from
-//those by going left-to-right along edges from E0 and right-to-left along
-//edges from Em. This essentially means that for each unmatched vertex in L, we
-//add into T all vertices that occur in a path alternating between edges from
-//E0 and Em. Then (L \ T) union (R disjun T) is a minimum vertex cover.
-class ProblemC_ekp2008
+// König's theorem reads as follows: In any bipartite graph, the number of edges
+// in a maximum matching is equal to the number of vertices in a minimum vertex
+// cover (VC). Given the matching, the VC is constructed as follows:
+// Put all unmatched left side nodes (L) in T, and add all nodes that are
+// reachable from T via an alternating path.
+// Now VC = (L \ T) union (R intersect T).
+class BipartiteMaximumMatching//ProblemC_ekp2008
 {
 	public static final int LEFT = 0, RIGHT = 1;
 	
 	private static int n;
 	private static int[] type;
 	private static List<Integer>[] edges;
-	private static int[] match; // match[i] = the node to which i is matched
-	private static int[] prev;  // prev[i] = previous node in alternating path
+	private static int[] match;  // match[i] = the node to which i is matched
+	private static int[] prev;    // prev[i] = previous node in alternating path
+	private static boolean[] inVC; // inVC[i] = if i is in the vertex cover
 	
-	public static int maximumMatching()
+	// Afterwards, match contains the matching and inVC the vertex cover.
+	public static void maximumMatching()
 	{
-		int matches = 0;
+		// initialize variables
 		match = new int[n];
 		prev = new int[n];
+		inVC = new boolean[n];
 		Arrays.fill(match, -1);
 		Arrays.fill(prev, -1);
-		
+		Queue<Integer> q = new LinkedList<Integer>(); // used later
+		boolean[] inT = new boolean[n];
 		// apply matching algorithm
 		for (int i = 0; i < n; i++)
 		{
 			if (type[i] != LEFT)              // or != RIGHT if you're
 				continue;                     // starting at the RIGHT side
-			int curr = bfs(i), next;          // find an alternating path
-			// special case: no end means node is in T
-			if (curr == -1)
-				continue;
-			// flip the matching on the path
-			while (curr != -1)
+			int curr = altPathBfs(i), next;   // find an alternating path
+			if (curr == -1)                   // no path found => node is in T
+				inT[i] = q.add(i);
+			while (curr != -1)                // flip the matching on the path
 			{
-				match[curr] = prev[curr];
-				match[prev[curr]] = curr;
-				next = prev[prev[curr]];
-				prev[curr] = prev[prev[curr]] = -1;
+				match[curr] = prev[curr];     // curr is a RIGHT node, now make
+				match[prev[curr]] = curr;     // matching between curr and prev
+				next = prev[prev[curr]];      // set curr to previous RIGHT node
+				prev[curr] = prev[prev[curr]] = -1; // clean up (not mandatory)
 				curr = next;
 			}
-			// count the match
-			matches++;
 		}
-		return matches;
+		// construct T (see König's Theorem)
+		while (!q.isEmpty())
+		{
+			int u = q.remove();
+			for (int v : edges[u])
+				if (!inT[v] && ((type[u] == LEFT) != (v == match[u])))
+					inT[v] = q.add(v);
+		}
+		// and finally make the vertex cover
+		for (int i = 0; i < n; i++)
+			inVC[i] = (type[i] == LEFT) != inT[i];
 	}
 	
-	private static int bfs(int s)
+	private static int altPathBfs(int s)
 	{
-		prev[s] = -1; // backwards compatibility with dfs... I think
+		prev[s] = -1;
 		Queue<Integer> q = new LinkedList<Integer>();
 		boolean[] visited = new boolean[n];
 		visited[s] = q.add(s);
 		while (!q.isEmpty())
 		{
-			int i = q.remove();
-			// base case: found the end of a path
-			if (type[i] == RIGHT && match[i] == -1)
-				return i;
-			// if it's a doglover, continue with the only possible catlover
-			else if (type[i] == 'D')
-				visited[i] = q.add(match[prev[match[i]] = i]);
-			// for catlovers, expand to all possible doglovers
-			else if (type[i] == 'C')
-				for (int j = 0; j < numEdges[i]; j++)
-					if (!visited[edges[i][j]])
-						visited[edges[i][j]] = q.add(edges[prev[edges[i][j]]=i][j]);
+			int u = q.remove();
+			if (type[u] == RIGHT && match[u] == -1)     // unmatched node at the
+				return u;                // RIGHT side => alternating path found
+			// matched node at the RIGHT side, go on with matched LEFT side node
+			else if (type[u] == RIGHT)
+				visited[u] = q.add(match[prev[match[u]] = u]);
+			else if (type[u] == LEFT)    // for LEFT side nodes,
+				for (int v : edges[u])   // expand to all RIGHT side nodes
+					if (!visited[v])     // that are not yet visited
+					{
+						prev[v] = u;
+						visited[v] = q.add(v);
+					}
 		}
 		return -1;
 	}
@@ -570,9 +571,120 @@ class ProblemC_ekp2008
 
 
 
+// Solves the following problem: given two trees, are they isomorphic?
+// A tree is represented by a root node. Each node has a list of 0 or more
+// edges, one of which is the parent (if it has one), and stores the total
+// number of children (successors). The correct parent doesn't have to be known,
+// but it must be set nonetheless. The algorithm tries all possibilities to map
+// the nodes of one tree to the nodes of the other and skips large parts of the
+// search space if the number of children or the number of successors of two
+// nodes are unequal.
+class TreeIsomorphism //ProblemE_ekp2003
+{
+	
+	// s and t are node lists that form two valid trees that are being compared.
+	public static boolean isIsomorph(Node[] s, Node[] t)
+	{
+		setRoot(s[0]);
+		for (int i = 0; i < t.length; i++)
+			if (isomorph(s[0], setRoot(t[i])))
+				return true;
+		return false;
+	}
+	
+	// Nodes n and m are the roots of the two trees that are being compared.
+	public static boolean isomorph(Node n, Node m)
+	{
+		if (n.successors != m.successors || n.edges.length != m.edges.length)
+			return false;
+		if (n.successors == 0)
+			return true;
+		boolean found = true;
+		boolean[] used = new boolean[m.edges.length];
+		for (int i = 0; i < n.edges.length && found; i++)
+		{
+			if (n.edges[i] == n.parent)
+				continue;
+			found = false;
+			for (int j = 0; j < m.edges.length && !found; j++)
+				if (!used[j] && m.edges[j] != m.parent)
+					used[j] = found = isomorph(n.edges[i], m.edges[j]);
+		}
+		return found;
+	}
+	
+	private static Node setRoot(Node node)
+	{
+		Node newParent = null;
+		// walk up to the old root to set the new parent
+		while (node != null)
+		{
+			Node next = node.parent;
+			node.parent = newParent;
+			newParent = node;
+			node = next;
+		}
+		// walk back to the new root to set the number of successors
+		// here: newParent is the old root and node is null
+		int n = (node=newParent).successors + 1;
+		while (node.parent != null)
+		{
+			node.successors = n - node.parent.successors - 2;
+			node = node.parent;
+		}
+		node.successors = n - 1;
+		return node;
+	}
+	
+	public static class Node
+	{
+		public Node parent = null;
+		public List<Node> edgeList = new ArrayList<Node>(); // tmp
+		public Node[] edges;     // non-tmp
+		public int successors = 0;
+		public Node(Node parent)
+		{this.parent = parent; if (parent != null) edgeList.add(parent);}
+		public void makeChildren()
+		{
+			edges = new Node[edgeList.size()];
+			edgeList.toArray(edges);
+			edgeList = null;
+		}
+	}
+}
 
-// TODO: implementation of Tarjan's Algorithm for finding of Strongly Connected Components (+ explanation what a SCC is!!)
-// TODO: implementation of Levenshtein distance
+
+
+//TODO: implementation of Tarjan's Algorithm for finding of Strongly Connected Components (+ explanation what a SCC is!!)
+
+
+
+// Implementation of the Levenshtein Distance Algorithm.
+class Levenshtein
+{
+	public static int levenshteinDistance(String s1, String s2)
+	{
+		char[] s = s1.toCharArray();
+		char[] t = s2.toCharArray();
+		int n = s.length, m = t.length;
+		int[][] dyn = new int[n+1][m+1];
+		for (int i = 0; i <= n; i++)
+			dyn[i][0] = i;
+		for (int j = 0; j <= m; j++)
+			dyn[0][j] = j;
+		for (int i = 1; i <= n; i++)
+			for (int j = 1; j <= m; j++)
+				if (s[i-1] == t[j-1])
+					dyn[i][j] = dyn[i-1][j-1];
+				else
+					dyn[i][j] = 1+min(dyn[i-1][j], dyn[i][j-1], dyn[i-1][j-1]);
+		return dyn[n][m];
+	}
+	private static int min(int i, int j, int k)
+	{
+		return i<j ? (i<k ? i : k) : (j<k ? j : k);
+	}
+}
 
 
 
@@ -663,7 +775,7 @@ class Maze
 
 
 //Calculates the area of a triangle, given the lengths of the sides. This can
-//be usefull if the points of the triangle are not known (otherwise, just use
+//be useful if the points of the triangle are not known (otherwise, just use
 //the formula which is used in the ConvexHull class, just above here).
 class Heron
 {
@@ -684,8 +796,8 @@ class Heron
 //is a tuple of two floating point numbers. It first scans the points from left
 //to right, creating the upper half of the hull, and then from right to left,
 //creating the lower half of the hull. This implementation avoids the use of
-//goniometry, by using the area function as the check to see if three points
-//form a convex line. The result is a list of points on the conves hull in
+//trigonometry, by using the area function as the check to see if three points
+//form a convex line. The result is a list of points on the convex hull in
 //clockwise order, starting with the leftmost point.
 //The coordinate system is defined as follows:
 //- x runs from left to right
@@ -750,7 +862,7 @@ class ConvexHull
 
 
 // Implements a Convex Hull 3D algorithm as described on page 249 of
-// Computational Geometry, De Berg et al., 3rd edition. In a nutshell: start
+// Computational Geometry, De Berg et al., 3rd edition. In a nut shell: start
 // with 4 arbitrary points that do not lie in a plane, then extend that hull by
 // incrementally adding points. If a point is outside the hull, adjust the hull,
 // otherwise do nothing. Implementation is quite heavy though.
@@ -1098,29 +1210,15 @@ class Triangulation
 	public static List<Point> monotones;
 	public static Map<Point, Edge> e;
 	
-	public static void main(String[] args)
+	// In the returning array, each consecutive three points form one triangle.
+	public static Point[] triangulate(Point[] points)
 	{
-		Point[] points = new Point[100];
-		int n = points.length;
-		double f = 11;
-		double c = 40;
-		for (Point p : points)
-		{
-			p.x = f*p.x + c;
-			p.y = f*p.y + c - 400;
-		}
-		
 		// compute the monotones
 		List<Point> monotones = monotonize(points);
 		// convert the monotones to triangles
-		Point[] triangles = new Point[(n-2)*3];
+		Point[] triangles = new Point[(points.length-2)*3];
 		triangulate(monotones, triangles);
-		
-		// calculate area of the polygon
-		double area = 0;
-		for (int i = 0; i < n-2; i++)
-			area += area(triangles[3*i], triangles[3*i+1], triangles[3*i+2]);
-		System.out.println(area);
+		return triangles;
 	}
 	
 	public static double area(Point a, Point b, Point c)
@@ -1513,32 +1611,12 @@ class Triangulation
 
 
 
+// Implementation of a Delaunay Triangulation, which is a special type of
+// triangulation where the triangles are made as 'triangular' as possible. As a
+// result, the minimum angle of all angles of all triangles is maximized.
 class DelaunayTriangulation
 {
-	
-	public static void main(String[] args)
-	{
-		int n = 200;
-		Point[] p = new Point[n];
-		Random r = new Random(18);
-		for (int i = 0; i < n; i++)
-		{
-//			Point point = new Point(r.nextInt(380)+10, r.nextInt(380)+10);
-			double radius = Math.sqrt(r.nextDouble())*190;
-			double alpha = r.nextDouble()*2*Math.PI;
-			int x = (int)(Math.cos(alpha)*radius);
-			int y = (int)(Math.sin(alpha)*radius);
-			Point point = new Point(200+x, 200+y);
-			if (!Arrays.asList(p).contains(point))
-				p[i] = point;
-			else
-				i--;
-		}
-		Triangle[] tri = delaunayTriangulation(p);
-		Visualizer.showDelaunayTriangulation(tri, p);
-	}
-	
-	private static Triangle[] delaunayTriangulation(Point[] p)
+	public static Triangle[] delaunayTriangulation(Point[] p)
 	{
 		Arrays.sort(p);
 		List<Triangle> tri = new ArrayList<Triangle>();
@@ -1563,7 +1641,7 @@ class DelaunayTriangulation
 			Triangle s = prev;
 			int si = s.getTi(prev = null);
 			// find first triangle below last point which is not visible
-			for (boolean goBack = true; goBack; goBack = area(p[i], s.p[(si+1)%3], s.p[si]) > 0)
+			for (boolean go=true; go; go = area(p[i],s.p[(si+1)%3],s.p[si]) > 0)
 			{
 				// walk backward over the hull
 				int spi = (si+2)%3;
@@ -1631,7 +1709,7 @@ class DelaunayTriangulation
 			if (that == null) return;
 			for (int i = 0; i < 3; i++)
 				for (int j = 0; j < 3; j++)
-					if (this.p[i] == that.p[(j+1)%3] && this.p[(i+1)%3] == that.p[j])
+					if (p[i] == that.p[(j+1)%3] && p[(i+1)%3] == that.p[j])
 						(this.t[i] = that).t[j] = this;
 		}
 		private int getTi(Triangle that)
@@ -1669,15 +1747,15 @@ class DelaunayTriangulation
 				that.t[tj] = this.t[ti1];
 				this.t[ti1] = that;
 				that.t[tj1] = this;
-				if (this.t[ti] != null) this.t[ti].t[this.t[ti].getTi(that)] = this;
-				if (that.t[tj] != null) that.t[tj].t[that.t[tj].getTi(this)] = that;
-				if (this.t[ti2] != null) q.add((this.t[ti2].prev = this).t[ti2]);
+				if (this.t[ti]!=null) this.t[ti].t[this.t[ti].getTi(that)]=this;
+				if (that.t[tj]!=null) that.t[tj].t[that.t[tj].getTi(this)]=that;
+				if (this.t[ti2] != null) q.add((this.t[ti2].prev= this).t[ti2]);
 				if (that.t[tj]  != null) q.add((that.t[tj].prev = that).t[tj]);
 			}
 		}
 	}
 	
-	private static class Point implements Comparable<Point>, visualize.Point
+	public static class Point implements Comparable<Point>, visualize.Point
 	{
 		int x, y;
 		public Point(int x, int y)
@@ -1705,133 +1783,6 @@ class DelaunayTriangulation
 //		@Override public void setY(int y) {this.y=y;}
 //		@Override public void setX(double x) {this.x=(int)x;}
 //		@Override public void setY(double y) {this.y=(int)y;}
-	}
-}
-
-
-
-// TODO: remove problem specific code (here: conversion of char-array to tree)
-// Solves the following problem: given two trees, are they isomorphic?
-// A tree is represented by a root node. Each node has a list of 0 or more
-// children and stores the total number of children (successors). The parent
-// doesn't have to be known. The algorithm now tries all possibilities to map
-// the nodes of one tree to the nodes of the other.
-// Uses a speed up by cutting backtracking immediately if the number of children
-// or the number of successors of two nodes are unequal.
-// Note: the input is highly problem specific. Don't bother reading it.
-// Note: in the original problem, the roots were fixed. This implementation
-// also allows different roots, which is more general. Therefore, bear in mind
-// that the parent is added to the list of children and should be skipped when
-// iterating the children.
-class TreeIsomorphism //ProblemE_ekp2003
-{
-	
-	public static void main(String[] args) throws Throwable
-	{
-		Scanner in = new Scanner(new File("tcr/sampledata/e-ekp2003.in"));
-		int cases = in.nextInt();
-		while (cases-- > 0)
-		{
-			char[] s = in.next().toCharArray();
-			char[] t = in.next().toCharArray();
-			Node[] t1 = new Node[s.length/2 + 1];
-			Node[] t2 = new Node[t.length/2 + 1];
-			makeTree(t1, s);
-			makeTree(t2, t);
-			if (isIsomorph(t1, t2))
-				System.out.println("same");
-			else
-				System.out.println("different");
-		}
-	}
-	
-	private static boolean isIsomorph(Node[] s, Node[] t)
-	{
-		setRoot(s[0], s.length);
-		for (int i = 0; i < t.length; i++)
-			if (isomorph(s[0], setRoot(t[i], t.length)))
-				return true;
-		return false;
-	}
-	
-	// Nodes n and m are the roots of the two trees that are being compared.
-	private static boolean isomorph(Node n, Node m)
-	{
-		if (n.successors != m.successors || n.children.length != m.children.length)
-			return false;
-		if (n.successors == 0)
-			return true;
-		boolean found = true;
-		boolean[] used = new boolean[m.children.length];
-		for (int i = 0; i < n.children.length && found; i++)
-		{
-			if (n.children[i] == n.parent)
-				continue;
-			found = false;
-			for (int j = 0; j < m.children.length && !found; j++)
-				if (!used[j] && m.children[j] != m.parent)
-					used[j] = found = isomorph(n.children[i], m.children[j]);
-		}
-		return found;
-	}
-	
-	private static void makeTree(Node[] tree, char[] s)
-	{
-		int size = 0;
-		Node root = tree[size++] = new Node(null);
-		for (int i = 0; i < s.length; i++)
-			if (s[i] == '0')
-			{
-				tree[size] = new Node(root);
-				root.childrenArray.add(tree[size]);
-				root = tree[size++];
-			}
-			else
-			{
-				int successors = root.successors + 1;
-				root.makeChildren();
-				root = root.parent;
-				root.successors += successors;
-			}
-		tree[0].makeChildren();
-	}
-	
-	private static Node setRoot(Node node, int n)
-	{
-		Node newParent = null;
-		// walk up to the old root to set the new parent
-		while (node != null)
-		{
-			Node next = node.parent;
-			node.parent = newParent;
-			newParent = node;
-			node = next;
-		}
-		// walk back to the new root to set the number of successors
-		node = newParent;
-		while (node.parent != null)
-		{
-			node.successors = n - node.parent.successors - 2;
-			node = node.parent;
-		}
-		node.successors = n - 1;
-		return node;
-	}
-	
-	private static class Node
-	{
-		public Node parent = null;
-		public ArrayList<Node> childrenArray = new ArrayList<Node>();
-		public Node[] children;
-		public int successors = 0;
-		public Node(Node parent)
-		{this.parent = parent; if (parent != null) childrenArray.add(parent);}
-		public void makeChildren()
-		{
-			children = new Node[childrenArray.size()];
-			childrenArray.toArray(children);
-			childrenArray = null;
-		}
 	}
 }
 
