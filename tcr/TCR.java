@@ -1,6 +1,9 @@
 package tcr;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.StreamTokenizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -700,6 +703,55 @@ class Tarjan
 				inStack[w] = false;     // they are part of the SCC
 				lowlink[w] = index[v];  // lowlink now contains the cluster id
 			}
+	}
+}
+
+
+
+class Knapsack // dkp2005.ProblemH
+{
+	public static int[] t, m, v;
+	public static int[][][] dyn = new int[101][101][101];
+	
+	public static void main(String[] args) throws Throwable
+	{
+		Scanner in = new Scanner(new File("dkp2005/sampledata/h.in"));
+		int cases = in.nextInt();
+		while (cases-- > 0)
+		{
+			int N = in.nextInt();
+			int T = in.nextInt();
+			int M = in.nextInt();
+			t = new int[N+1];
+			m = new int[N+1];
+			v = new int[N+1];
+			for (int i = 1; i <= N; i++)
+			{
+				t[i] = in.nextInt();
+				m[i] = in.nextInt();
+				v[i] = in.nextInt();
+			}
+			// init cache, calculate solution and print it
+			for (int i = 1; i <= N; i++)
+				for (int j = 1; j <= T; j++)
+					Arrays.fill(dyn[i][j], -1);
+			System.out.println(solve(N, T, M));
+		}
+	}
+	
+	public static int solve(int n, int tleft, int mleft)
+	{
+		// Niks meer over? dan is de solution 0
+		if (n == 0 || tleft == 0 || mleft == 0)
+			return 0;
+		// Hebben we al een solution? return die dan
+		if (dyn[n][tleft][mleft] != -1)
+			return dyn[n][tleft][mleft];
+		// Anders, bereken solution, sla op en return
+		int ans = solve(n-1, tleft, mleft);
+		if (t[n] < tleft && m[n] < mleft)         
+			ans = Math.max(ans, solve(n-1, tleft-t[n], mleft-m[n]) + v[n]);
+		return dyn[n][tleft][mleft] = ans;
 	}
 }
 
