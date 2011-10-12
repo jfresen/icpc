@@ -15,6 +15,20 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.Stack;
 
+// General implementation of an edge. This is used in Dijkstra's shortest path,
+// Bellman-Ford's shortest path, Kruskal's minimal spanning tree and
+// Edmonds-Karp's max-flow algorithm. Some of them, like Dijkstra's algorithm,
+// use only a small number of the properties (hence the polymorph constructor).
+class Edge implements Comparable<Edge>
+{
+	int u, v, w, f; // from, to, weight/length/capacity, flow
+	Edge dual;      // only used in the max-flow algorithm
+	public Edge(int to, int length) {v=to; w=length;}
+	public Edge(int from, int to, int length) {u=from; v=to; w=length;}
+	@Override public int compareTo(Edge e)
+	{return w - e.w;}
+}
+
 // Implementation of breath first search. Input file specifies number of nodes,
 // number of edges, the start node, the end node and all connections (tuples of
 // two ints from and to). For finding a shortest path in a weighted graph, use
@@ -71,9 +85,7 @@ class BFS
 class CDFS
 {
 	// Colors to tag nodes with
-	public static final int WHITE = 0;
-	public static final int GREY  = 1;
-	public static final int BLACK = 2;
+	static final int WHITE = 0, GREY = 1, BLACK = 2;
 	
 	// Returns true if the graph contains a cycle.
 	// n = number of nodes; edges = list of outgoing edges per node
@@ -97,7 +109,6 @@ class CDFS
 					}
 		return false;
 	}
-	
 }
 
 
@@ -187,17 +198,10 @@ class Dijkstra
 					continue;
 				len[nd.i] = nd.l;
 				for (Edge e : edges[nd.i])
-					q.add(new Node(e.t, nd.l+e.l));
+					q.add(new Node(e.v, nd.l+e.w));
 			}
 			System.out.println(len[end]+" - "+Arrays.toString(len));
 		}
-	}
-	
-	private static class Edge
-	{
-		int t, l; // to and length. from is implied by edges[from]
-		public Edge(int to, int length)
-		{t=to; l=length;}
 	}
 	
 	private static class Node implements Comparable<Node>
@@ -220,7 +224,7 @@ class Dijkstra
 // nodes, number of edges, the start node, the end node and all connections
 // (triples of three ints from, to and length). Node numbers start from 0.
 // This does not keep track of the actual path. To do so, add 'int[] prev = new
-// int[n]' to the algorithm and in the if body, add 'prev[E[j].t] = E[j].f'.
+// int[n]' to the algorithm and in the if body, add 'prev[E[j].v] = E[j].u'.
 class BellmanFord
 {
 	public static void main(String[] args) throws Throwable
@@ -247,24 +251,16 @@ class BellmanFord
 //				E[i++]=new Edge(t, f, l);
 //			}
 			int[] len = new int[n]; // len[i] = length from start node to node i
-			int max = 10000;        // max > sum(e[i].l)
-			Arrays.fill(len, max);  // WARNING: max + max(E[j].l) may overflow
+			int max = 10000;        // max > sum(E[i].w)
+			Arrays.fill(len, max);  // WARNING: max + max(E[j].w) may overflow
 			len[start] = 0;
 			for (int i = 0; i < n; i++)
 				for (int j = 0; j < m; j++)
-					if (len[E[j].t] > len[E[j].f] + E[j].l)
-						len[E[j].t] = len[E[j].f] + E[j].l;
+					if (len[E[j].v] > len[E[j].u] + E[j].w)
+						len[E[j].v] = len[E[j].u] + E[j].w;
 			System.out.println(len[end]+" - "+Arrays.toString(len));
 		}
 	}
-	
-	private static class Edge
-	{
-		int f, t, l; // from, to and length
-		public Edge(int from, int to, int length)
-		{f=from; t=to; l=length;}
-	}
-	
 }
 
 
@@ -312,8 +308,8 @@ class FloydWarshall
 // Also features an astonishingly simple implementation of a disjoint-set.
 class Kruskal
 {
-	private static int[] parent;
-	private static int[] rank;
+	static int[] parent;
+	static int[] rank;
 	
 	public static void main(String[] args) throws Throwable
 	{
@@ -327,16 +323,16 @@ class Kruskal
 			Edge[] tree = new Edge[n-1];
 			for (int i = 0; i < m; i++)
 				edges[i] = new Edge(in.nextInt(), in.nextInt(), in.nextInt());
-			parent = new int[n]; // disjoint-set
-			rank = new int[n];   // datastructure
+			parent = new int[n];       // disjoint-set
+			rank = new int[n];         // datastructure
 			for (int i = 0; i < n; i++)
 				parent[i] = i;
 			Arrays.sort(edges); // the sort is actually the slowest operation...
 			for (Edge e : edges)
-				if (join(e.x, e.y))
+				if (join(e.u, e.v))
 					tree[s++] = e;
 			for (Edge e : tree)
-				System.out.println("("+e.x+", "+e.y+", ["+e.l+"])");
+				System.out.println("("+e.u+", "+e.v+", ["+e.w+"])");
 		}
 	}
 	
@@ -356,15 +352,6 @@ class Kruskal
 		else if (xrt != yrt)
 			rank[parent[yrt]=xrt]++;
 		return xrt != yrt;
-	}
-	
-	private static class Edge implements Comparable<Edge>
-	{
-		int x, y, l; // from, to and length
-		public Edge(int from, int to, int length)
-		{x=from; y=to; l=length;}
-		@Override public int compareTo(Edge e)
-		{return l - e.l;}
 	}
 }
 
@@ -414,7 +401,7 @@ class EdmondsKarp
 				que[q++] = s;
 				while (p < q && pre[t] < 0)
 					for (Edge e : edges[u=que[p++]])
-						if (pre[v=e.v] < 0 && (j=e.c-e.f) != 0)
+						if (pre[v=e.v] < 0 && (j=e.w-e.f) != 0)
 						{
 							pre[que[q++]=v] = u;
 							flw[v] = Math.min(flw[u], j);
@@ -441,7 +428,7 @@ class EdmondsKarp
 			seen[que[q++] = s] = true;
 			while (p < q)
 				for (Edge e : edges[que[p++]])
-					if (!seen[v=e.v] && (e.c-e.f)!= 0)
+					if (!seen[v=e.v] && (e.w-e.f)!= 0)
 						seen[que[q++]=v] = true;
 			// and show the answers
 			System.out.println("Max flow: " + size);
@@ -456,18 +443,6 @@ class EdmondsKarp
 			System.out.println("]");
 		}
 	}
-	
-	private static class Edge
-	{
-		int u, v, c, f;
-		Edge dual; // the dual of this edge
-		public Edge(int from, int to, int capacity)
-		{u=from; v=to; c=capacity;}
-		@Override
-		public String toString()
-		{return "("+u+","+v+") ["+f+"/"+c+"]";}
-	}
-	
 }
 
 
@@ -492,14 +467,14 @@ class EdmondsKarp
 // Now VC = (L \ T) union (R intersect T).
 class BipartiteMaximumMatching//ProblemC_ekp2008
 {
-	public static final int LEFT = 0, RIGHT = 1;
+	static final int LEFT = 0, RIGHT = 1;
 	
-	private static int n;
-	private static int[] type;
-	private static List<Integer>[] edges;
-	private static int[] match;  // match[i] = the node to which i is matched
-	private static int[] prev;    // prev[i] = previous node in alternating path
-	private static boolean[] inVC; // inVC[i] = if i is in the vertex cover
+	static int n;
+	static int[] type;
+	static List<Integer>[] edges;
+	static int[] match;  // match[i] = the node to which i is matched
+	static int[] prev;    // prev[i] = previous node in alternating path
+	static boolean[] inVC; // inVC[i] = if i is in the vertex cover
 	
 	// Afterwards, match contains the matching and inVC the vertex cover.
 	public static void maximumMatching()
@@ -566,7 +541,6 @@ class BipartiteMaximumMatching//ProblemC_ekp2008
 		}
 		return -1;
 	}
-	
 }
 
 
@@ -669,15 +643,15 @@ class TreeIsomorphism //ProblemE_ekp2003
 // SCCs. All nodes that share the same lowlink are in the same component.
 class Tarjan
 {
-	private int n;
-	private List<Integer>[] d_edges;
-	private int nextIndex;
-	private int[] index;
-	private int[] lowlink;
-	private boolean[] inStack;
-	private Stack<Integer> stack;
+	static int n;
+	static List<Integer>[] d_edges;
+	static int nextIndex;
+	static int[] index;
+	static int[] lowlink;
+	static boolean[] inStack;
+	static Stack<Integer> stack;
 	
-	public void tarjan()
+	public static void tarjan()
 	{
 		// Setup Tarjan's algorithm:
 		nextIndex = 0;
@@ -703,7 +677,7 @@ class Tarjan
 		System.out.println(sizes[max]);
 	}
 	
-	private void tarjan(int v)
+	private static void tarjan(int v)
 	{
 		index[v] = nextIndex++;         // set depth index for v
 		lowlink[v] = index[v];          // init the lowlink
@@ -727,7 +701,6 @@ class Tarjan
 				lowlink[w] = index[v];  // lowlink now contains the cluster id
 			}
 	}
-	
 }
 
 
@@ -877,8 +850,7 @@ class Heron
 //- y runs from bottom to top
 class ConvexHull
 {
-	
-	public static final double EPSILON = 0.0001;
+	static final double EPSILON = 0.0001;
 	
 	public static Point[] getConvexHull(Point[] p)
 	{
@@ -929,7 +901,6 @@ class ConvexHull
 			return 0;
 		}
 	}
-
 }
 
 
@@ -941,16 +912,15 @@ class ConvexHull
 // otherwise do nothing. Implementation is quite heavy though.
 class ConvexHull3D
 {
-	
-	public static final double EPSILON = 0.000000001;
+	static final double EPSILON = 0.000000001;
 	
 	// Is a point BEFORE, ON or AFTER a plane defined by three other points?
-	public static final int BEFORE =  1;
-	public static final int ON     =  0;
-	public static final int AFTER  = -1;
+	static final int BEFORE =  1;
+	static final int ON     =  0;
+	static final int AFTER  = -1;
 	
-	private static List<Point> P; // List of points in the input set
-	private static Set<Face> F;   // Set of faces of the hull
+	static List<Point> P; // List of points in the input set
+	static Set<Face> F;   // Set of faces of the hull
 	
 	// Make a convex hull, according to 
 	// Returns a set of faces (=convex polygons) that define the hull.
@@ -1254,7 +1224,6 @@ class ConvexHull3D
 			return area;
 		}
 	}
-	
 }
 
 
@@ -1270,18 +1239,17 @@ class ConvexHull3D
 // - y runs from bottom to top
 class Triangulation
 {
+	static final double EPSILON = 0.0001;
+	static final int N = 1000;
 	
-	public static final double EPSILON = 0.0001;
-	public static final int N = 1000;
+	final static int START_VERTEX = 0;
+	final static int END_VERTEX = 1;
+	final static int REGULAR_VERTEX = 2;
+	final static int SPLIT_VERTEX = 3;
+	final static int MERGE_VERTEX = 4;
 	
-	public final static int START_VERTEX = 0;
-	public final static int END_VERTEX = 1;
-	public final static int REGULAR_VERTEX = 2;
-	public final static int SPLIT_VERTEX = 3;
-	public final static int MERGE_VERTEX = 4;
-	
-	public static List<Point> monotones;
-	public static Map<Point, Edge> e;
+	static List<Point> monotones;
+	static Map<Point, Edge> e;
 	
 	// In the returning array, each consecutive three points form one triangle.
 	public static Point[] triangulate(Point[] points)
@@ -1552,7 +1520,6 @@ class Triangulation
 	
 	private static class AATree
 	{
-		
 		private Node root, lastNode;
 		Node nullNode;
 
@@ -1677,9 +1644,7 @@ class Triangulation
 				level = 1;
 			}
 		}
-
 	}
-	
 }
 
 
@@ -1924,7 +1889,6 @@ class GCD
 	{
 		return (a|b)==0 ? 0 : (int)((long)a*b/gcd_euclidean(a,b));
 	}
-	
 }
 
 
@@ -2011,5 +1975,4 @@ class PrimeGenerator
 		
 		return Math.max(10, (int)(x / (Math.log(x)- 1.12)));
 	}
-	
 }
