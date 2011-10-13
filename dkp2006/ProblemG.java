@@ -1,67 +1,43 @@
 package dkp2006;
 
-import java.io.*;
-import java.util.ArrayList;
+import java.io.File;
+import java.util.Scanner;
 
-class ProblemG {
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) throws Exception {
-		BufferedReader r = new BufferedReader(new FileReader("g.in"));
-		int cases = Integer.parseInt(r.readLine());
-		int occ, begin, found;
-		for (int i = 0; i < cases; i++)
-		{
-			word = r.readLine().toCharArray();
-			text = r.readLine().toCharArray();
-			int wlen = word.length;
-			int tlen = text.length;
-			
-			occ = 0;
-			
-			int wsum = 0, tsum = 0;
-			
-			for (int pos = 0; pos < wlen; pos++) {
-				wsum += word[pos];
-				tsum += text[pos];
-			}
-			
-			//System.out.println("W: " + wsum);
-			ArrayList poss = new ArrayList(100); 
-			
-			for (int pos = wlen; pos <= tlen; pos++) {
-				//System.out.println("POS: " + pos + " W: " + wsum + " T: " + tsum);
-				if (tsum == wsum) {
-					poss.add(new Integer(pos));
-				}
-				// update checksum
-				if (pos < tlen) {
-					tsum = tsum - text[pos-wlen] + text[pos];
-					//System.out.println("CHK - " + text[pos-wlen] + " + " + text[pos] + " S: " + tsum);
-				}
-			}
-			
-			for (int j = 0; j < poss.size(); j++) {
-				if (check(((Integer) poss.get(j)).intValue() - wlen))
-					occ++;
-			}
-			
-			System.out.println(occ);
-		}
+public class ProblemG
+{
+	public static void main(String[] args) throws Throwable
+	{
+		Scanner in = new Scanner(new File("dkp2006/testdata/g.in"));
+		int cases = in.nextInt();
+		while (cases-- > 0)
+			System.out.println(knuthMorrisPratt(in.next(), in.next()));
 	}
+
+	private static int knuthMorrisPratt(String needle, String haystack)
+	{
+		char[] t = needle.toCharArray();
+		char[] s = haystack.toCharArray();
+		int i, j, T = t.length, S = s.length, c = 0; // c = match count
+		int[] x = new int[T+1];
 		
-	public static boolean check(int pos) {
-		for (int p = 0; p < word.length; p++) {
-			if (text[pos+p] != word[p]) {
-				//System.out.println("FA " + pos);
-				return false;
-			}
-		}
-		//System.out.println("OK " + pos);
-		return true;
+		// Building of the Partial Match Table
+		for (i = 1, j = 0; i < T;)
+			if (t[i] == t[j])
+				x[++i] = ++j;
+			else if (j > 0)
+				j = x[j];
+			else
+				i++;
+		
+		// Find all matches
+		for (i = 0, j = 0; i < S;)
+			if (s[i] == t[j])
+				{i++; if (++j == T) {c++; j = x[j];}}
+			else if (j > 0)
+				j = x[j];
+			else
+				i++;
+		
+		return c;
 	}
-	
-	public static char[] word, text;
 }

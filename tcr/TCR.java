@@ -708,10 +708,18 @@ class Tarjan
 
 
 
+// Example implementation of a knapsack problem. To make things a bit more
+// interesting, this concerns a two-dimensional knapsack. Given a set of items
+// that have a value and d properties (here d=2), this shows how you can pick a
+// set of items that maximizes the value, given constraints on the properties.
+// The space complexity depends on the maximum value of the properties though!
+// In a nut shell: make a lookup table (dyn) with one dimension for the items
+// and one for each constraint property, then do simple backtracking over the
+// items while storing and reusing all intermediate results.
 class Knapsack // dkp2005.ProblemH
 {
-	public static int[] t, m, v;
-	public static int[][][] dyn = new int[101][101][101];
+	static int[] t, m, v;
+	static int[][][] dyn = new int[101][101][101];
 	
 	public static void main(String[] args) throws Throwable
 	{
@@ -719,39 +727,35 @@ class Knapsack // dkp2005.ProblemH
 		int cases = in.nextInt();
 		while (cases-- > 0)
 		{
-			int N = in.nextInt();
-			int T = in.nextInt();
-			int M = in.nextInt();
-			t = new int[N+1];
-			m = new int[N+1];
-			v = new int[N+1];
+			int N = in.nextInt();        // 1 <= N <= 100, number of items
+			int T = in.nextInt();        // 1 <= T <= 100, available time
+			int M = in.nextInt();        // 1 <= M <= 100, available weight
+			t = new int[N+1];            // t[i] = time needed to pickup item i
+			m = new int[N+1];            // m[i] = weight of item i
+			v = new int[N+1];            // v[i] = value of item i
 			for (int i = 1; i <= N; i++)
 			{
-				t[i] = in.nextInt();
-				m[i] = in.nextInt();
-				v[i] = in.nextInt();
+				t[i] = in.nextInt();     // read
+				m[i] = in.nextInt();     // all
+				v[i] = in.nextInt();     // input
 			}
-			// init cache, calculate solution and print it
-			for (int i = 1; i <= N; i++)
-				for (int j = 1; j <= T; j++)
-					Arrays.fill(dyn[i][j], -1);
+			for (int i = 1; i <= N; i++)        // initialize the cache
+				for (int j = 1; j <= T; j++)    // how wonderful would be a
+					Arrays.fill(dyn[i][j], -1); // method Arrays.deepFill
 			System.out.println(solve(N, T, M));
 		}
 	}
 	
 	public static int solve(int n, int tleft, int mleft)
 	{
-		// Niks meer over? dan is de solution 0
-		if (n == 0 || tleft == 0 || mleft == 0)
+		if (n == 0 || tleft == 0 || mleft == 0) // no items, time or weight left
 			return 0;
-		// Hebben we al een solution? return die dan
-		if (dyn[n][tleft][mleft] != -1)
-			return dyn[n][tleft][mleft];
-		// Anders, bereken solution, sla op en return
-		int ans = solve(n-1, tleft, mleft);
-		if (t[n] < tleft && m[n] < mleft)         
+		if (dyn[n][tleft][mleft] != -1)         // solution already known,
+			return dyn[n][tleft][mleft];        // return that solution
+		int ans = solve(n-1, tleft, mleft);     // calculate solution
+		if (t[n] < tleft && m[n] < mleft)       // ...
 			ans = Math.max(ans, solve(n-1, tleft-t[n], mleft-m[n]) + v[n]);
-		return dyn[n][tleft][mleft] = ans;
+		return dyn[n][tleft][mleft] = ans;      // store it, then return it
 	}
 }
 
@@ -783,6 +787,35 @@ class Levenshtein
 		return i<j ? (i<k ? i : k) : (j<k ? j : k);
 	}
 }
+
+
+
+// Implementation of Knuth-Morris-Pratt algorithm (string search). Gives an
+// O(n+m) algorithm instead of the naive O(n*m). The idea is to preprocess the
+// needle so the haystack can be searched linearly.
+class KnuthMorrisPratt
+{
+	public static int knuthMorrisPratt(String needle, String haystack)
+	{
+		char[] t = needle.toCharArray();
+		char[] s = haystack.toCharArray();
+		int i, j, T = t.length, S = s.length, c = 0; // c = match count
+		int[] x = new int[T+1];
+		
+		for (i = 1, j = 0; i < T;)               // Building of the
+			if (t[i] == t[j])   x[++i] = ++j;    // Partial Match Table
+			else if (j > 0)     j = x[j];        // ..
+			else                i++;             // ..
+		
+		for (i = 0, j = 0; i < S;)               // Find all matches
+			if (s[i] == t[j])   {i++; if (++j == T) {c++; j = x[j];}}
+			else if (j > 0)     j = x[j];
+			else                i++;
+		
+		return c;
+	}
+}
+
 
 
 
