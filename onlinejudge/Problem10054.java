@@ -13,6 +13,7 @@ public class Problem10054
 	public static void main(String[] args) throws Throwable
 	{
 		Scanner in = new Scanner(new File("onlinejudge/sampledata/10054.in"));
+//		Scanner in = new Scanner(System.in);
 		int cases = in.nextInt();
 		for (int caseNr = 1; caseNr <= cases; caseNr++)
 		{
@@ -26,9 +27,11 @@ public class Problem10054
 				beads[c2][c1]++;
 			}
 			Cycle necklace = solve(N, beads);
+			if (caseNr > 1)
+				System.out.println();
 			System.out.println("Case #"+caseNr);
 			if (necklace == null)
-				System.out.println("some beads may be lost\n");
+				System.out.println("some beads may be lost");
 			else
 				System.out.println(necklace);
 		}
@@ -65,6 +68,7 @@ public class Problem10054
 					last.next = first;
 					first.prev = last;
 					cycles.add(new Cycle(last));
+					c2--;
 				}
 		// Now we have put all beads into cycles, we join them all together
 		// (if possible)
@@ -150,9 +154,9 @@ public class Problem10054
 		public String toString()
 		{
 			StringBuilder s = new StringBuilder();
-			s.append(start.c1).append(" ").append(start.c2).append("\n");
+			s.append(start.c1).append(" ").append(start.c2);
 			for (Bead curr = start.next; curr != start; curr = curr.next)
-				s.append(curr.c1).append(" ").append(curr.c2).append("\n");
+				s.append("\n").append(curr.c1).append(" ").append(curr.c2);
 			return s.toString();
 		}
 	}
