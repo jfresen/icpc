@@ -26,7 +26,7 @@ public class Problem10054
 				beads[c1][c2]++;
 				beads[c2][c1]++;
 			}
-			Cycle necklace = solve(N, beads);
+			Cycle necklace = solve(beads);
 			if (caseNr > 1)
 				System.out.println();
 			System.out.println("Case #"+caseNr);
@@ -37,51 +37,70 @@ public class Problem10054
 		}
 	}
 	
-	private static Cycle solve(int N, int[][] beads)
+	/**
+	 * @param beads A variant of an adjacency matrix: the number in beads[i][j]
+	 *        indicates how many beads there are with colors i and j. Note that
+	 *        this means that every bead contributes two times in this matrix:
+	 *        one time with colors i and j and one time with colors j and i.
+	 *        This is also true in the case of a single colored bead: it still
+	 *        contributes in two ways, with colors i and j and with colors
+	 *        j and i, even though i == j.
+	 */
+	private static Cycle solve(int[][] beads)
 	{
 		Deque<Cycle> cycles = new LinkedList<Cycle>();
+		// First, find a place where we can start a new cycle
 		for (int c1 = 1; c1 <= COLORS; c1++)
 			for (int c2 = 1; c2 <= COLORS; c2++)
 				if (beads[c1][c2] > 0)
 				{
-					// Now we have a bead that can start our new cycle
+					// The new cycle starts at the bead with colors c1 and c2
 					Bead first, last = first = new Bead(c1, c2);
 					beads[last.c1][last.c2]--;
 					beads[last.c2][last.c1]--;
 					int curr = last.c2;
+					// Extend the list of beads until we're back at the start
 					search: while (curr != c1)
 					{
+						// Take any bead that fits the last bead
 						for (int next = 1; next <= COLORS; next++)
 							if (beads[curr][next] > 0)
 							{
-								// Found a new bead for our current cycle
-								curr = next;
-								last = last.add(next);
+								// We found a bead, attach it to the last one
+								last = last.attach(next);
 								beads[last.c1][last.c2]--;
 								beads[last.c2][last.c1]--;
+								curr = next;
 								continue search;
 							}
-						// We can't form a cycle anymore,
-						// which means some beads must be lost.
+						// We can't form a cycle anymore, which
+						// means there are some beads missing.
 						return null;
 					}
+					// Connect the end to the start
 					last.next = first;
 					first.prev = last;
+					// Save it
 					cycles.add(new Cycle(last));
+					// And don't forget about the possibility that there are
+					// more beads with colors c1 and c2, so c2 should be
+					// re-examined in the next iteration.
 					c2--;
 				}
-		// Now we have put all beads into cycles, we join them all together
-		// (if possible)
+		// Now we have put all beads into cycles,
+		// we join them all together (if possible)
 		merge: while (cycles.size() > 1)
 		{
+			// Join the last cycle with any of the previous ones
 			Cycle last = cycles.removeLast();
 			for (Cycle curr : cycles)
 				if (curr.canJoin(last))
 				{
+					// Found one! Just join it and continue the merge
 					curr.join(last);
 					continue merge;
 				}
-			// Couldn't merge the last cycle
+			// No compatible cycle found, meaning there are some beads missing
 			return null;
 		}
 		return cycles.getFirst();
@@ -92,12 +111,12 @@ public class Problem10054
 		int c1, c2;
 		Bead prev, next;
 		
-		public Bead(int c1, int c2)
+		public Bead(int u, int v)
 		{
-			this.c1 = c1; this.c2 = c2;
+			this.c1 = u; this.c2 = v;
 		}
 		
-		public Bead add(int color)
+		public Bead attach(int color)
 		{
 			next = new Bead(this.c2, color);
 			next.prev = this;
@@ -112,42 +131,45 @@ public class Problem10054
 		
 		public Cycle(Bead start)
 		{
+			// Store the cycle itself
 			this.start = start;
+			// And memorize which colors are being used in this cycle
 			used[start.c1] = true;
-			for (Bead b = start.next; b != start; b = b.next)
-				used[b.c1] = true;
+			for (Bead bead = start.next; bead != start; bead = bead.next)
+				used[bead.c1] = true;
 		}
 		
 		public boolean canJoin(Cycle that)
 		{
-			for (int i = 1; i <= COLORS; i++)
-				if (this.used[i] && that.used[i])
+			// Find a commonly used color
+			for (int color = 1; color <= COLORS; color++)
+				if (this.used[color] && that.used[color])
 					return true;
 			return false;
 		}
 		
 		public void join(Cycle that)
 		{
-			// Find color where we'll join the two cycles
+			// Find the color where we'll join the two cycles
 			int joinColor = 1;
 			while (!this.used[joinColor] || !that.used[joinColor])
 				joinColor++;
-			// Find the join place in cycle one
-			Bead joinPlace1 = this.start;
-			while (joinPlace1.c2 != joinColor)
-				joinPlace1 = joinPlace1.next;
-			// Find the join place in cycle one
-			Bead joinPlace2 = that.start;
-			while (joinPlace2.c1 != joinColor)
-				joinPlace2 = joinPlace2.next;
+			// Find the join place in this cycle
+			Bead joinAfterBead = this.start;
+			while (joinAfterBead.c2 != joinColor)
+				joinAfterBead = joinAfterBead.next;
+			// Find the join place in that cycle
+			Bead joinBeforeBead = that.start;
+			while (joinBeforeBead.c1 != joinColor)
+				joinBeforeBead = joinBeforeBead.next;
 			// Connect them together
-			joinPlace1.next.prev = joinPlace2.prev;
-			joinPlace2.prev.next = joinPlace1.next;
-			joinPlace1.next = joinPlace2;
-			joinPlace2.prev = joinPlace1;
-			// Update the used colors
-			for (int i = 1; i <= COLORS; i++)
-				this.used[i] |= that.used[i];
+			joinAfterBead.next.prev = joinBeforeBead.prev;
+			joinBeforeBead.prev.next = joinAfterBead.next;
+			joinAfterBead.next = joinBeforeBead;
+			joinBeforeBead.prev = joinAfterBead;
+			// Update the used nodes
+			for (int color = 1; color <= COLORS; color++)
+				this.used[color] |= that.used[color];
 		}
 		
 		@Override
