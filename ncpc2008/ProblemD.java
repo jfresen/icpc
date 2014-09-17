@@ -13,12 +13,12 @@ public class ProblemD
 	final static int TWO = 2;
 	final static int NOT = ONE+TWO;
 	
-	static int n;
-	static int[][] y;
-	static int[] room;
-	static int[] touch;
-	static int MIN;
-	static int MAX;
+	static int n;        // The number of attendants
+	static int[][] y;    // The year in which attendant i met attendant j
+	static int[] room;   // The room to which attendant i is assigned
+	static int[] touch;  // The step in which attendant i is assigned
+	static int MIN;      // ceil(1/3 of n)
+	static int MAX;      // floor(2/3 of n)
 	
 	public static void main(String[] args) throws Throwable
 	{
@@ -76,7 +76,7 @@ public class ProblemD
 	{
 		int i;
 		for (i = 0; i < n; i++) {
-			// attendent i is already assigned to a room
+			// attendent i is not yet assigned to a room
 			if (room[i] == 0)
 				break;
 		}
